@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ludzie</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#2E6F63">
+<meta name="theme-color" content="#B85C38">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,10 +13,10 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 <style>
-:root{--bg:#EEF1F5;--surface:#fff;--ink:#1C2536;--muted:#5B6679;--line:#D5DBE4;--accent:#2E6F63;--accent-ink:#fff;--warm:#C98F2A;--danger:#B3413A;
+:root{--bg:#F4EFE6;--surface:#fff;--ink:#2B2622;--muted:#83786B;--line:#E4DCCD;--accent:#B85C38;--accent-ink:#fff;--warm:#B7832A;--danger:#A8362F;
 --serif:"Fraunces",Georgia,serif;--sans:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 --st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root{--bg:#121822;--surface:#1B2330;--ink:#E8ECF2;--muted:#95A0B3;--line:#2C3646;--accent:#5FB3A1;--accent-ink:#0E1A17;--warm:#E2B45A;--danger:#E07A72}}
+@media (prefers-color-scheme:dark){:root{--bg:#1C1916;--surface:#27221D;--ink:#EFE8DE;--muted:#A89C8C;--line:#3A332B;--accent:#E07A55;--accent-ink:#1C1916;--warm:#E2B45A;--danger:#E07A72}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%}
 body{background:var(--bg);color:var(--ink);font:16px/1.45 var(--sans)}
@@ -30,25 +30,32 @@ button{cursor:pointer}
 .chip{flex:none;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:14px;white-space:nowrap}
 .chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 main{padding:8px 16px calc(var(--sb) + 150px)}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:18px 12px}
-.face{background:none;border:0;padding:0;text-align:center}
-.face .ph{width:100%;aspect-ratio:1;border-radius:30%;background:var(--line);object-fit:cover;display:grid;place-items:center;font:600 30px var(--serif);color:var(--muted)}
-.face b{display:block;font:500 15px/1.2 var(--serif);margin-top:6px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:16px 12px}
+.face{background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:6px 6px 8px;text-align:center;min-width:0}
+.grid .face:nth-child(4n+1){transform:rotate(-1.6deg)}.grid .face:nth-child(4n+2){transform:rotate(1.2deg)}.grid .face:nth-child(4n+3){transform:rotate(-.7deg)}.grid .face:nth-child(4n){transform:rotate(1.8deg)}
+.strip{display:flex;gap:12px;overflow-x:auto;padding:4px 2px 12px;margin:0 -16px;padding-left:16px;padding-right:16px;scrollbar-width:none}
+.strip .face{flex:none;width:106px}.strip .face:nth-child(odd){transform:rotate(-1.4deg)}.strip .face:nth-child(even){transform:rotate(1.2deg)}
+.gcard{flex:none;width:156px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px;text-align:left}
+.gcard b{display:block;font:500 16px/1.2 var(--serif);margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gcard small{color:var(--muted);font-size:12px}
+.sec{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:18px 0 8px}.sec h3{font:600 19px var(--serif);margin:0}
+.hd{display:flex;justify-content:space-between;align-items:baseline}.hd span{color:var(--muted);font-size:13px}
+.face .ph{width:100%;aspect-ratio:1;border-radius:2px;background:var(--line);object-fit:cover;display:grid;place-items:center;font:600 30px var(--serif);color:var(--muted)}
+.face b{display:block;font:500 15px/1.2 var(--serif);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .face small{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .empty{color:var(--muted);text-align:center;padding:48px 16px}
 .row{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
 .row img,.row .ph{width:48px;height:48px;border-radius:30%;object-fit:cover;background:var(--line);flex:none;display:grid;place-items:center;font:600 18px var(--serif);color:var(--muted)}
 .row .grow{flex:1;min-width:0}
 .when{font-weight:700;color:var(--warm);font-size:14px;text-align:right}
-nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;background:var(--surface);border-top:1px solid var(--line);padding-bottom:var(--sb)}
-nav.tabs button{flex:1;border:0;background:none;padding:10px 0 12px;font-size:13px;color:var(--muted)}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;background:var(--surface);border-top:1px solid var(--line);padding-bottom:var(--sb)}
+nav.tabs button{flex:1;border:0;background:none;height:60px;padding:0;font-size:11px;color:var(--muted)}
 nav.tabs button.on{color:var(--accent);font-weight:700}
 nav.tabs span{display:block;font-size:20px}
 .fab{position:fixed;right:18px;bottom:calc(var(--sb) + 76px);z-index:7;height:56px;padding:0 22px;border-radius:18px;border:0;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:16px;box-shadow:0 6px 18px rgba(20,40,40,.28)}
-.sheet{position:fixed;inset:0;z-index:20;background:var(--bg);overflow-y:auto;transform:translateY(24px);opacity:0;transition:.18s ease}
+.sheet{position:fixed;top:0;left:0;right:0;bottom:calc(60px + var(--sb));z-index:20;background:var(--bg);overflow-y:auto;transform:translateY(24px);opacity:0;transition:.18s ease}
 .sheet.on{transform:none;opacity:1}
 @media (prefers-reduced-motion:reduce){.sheet{transition:none}}
-.sheet-in{max-width:640px;margin:0 auto;padding:calc(var(--st) + 10px) 16px calc(var(--sb) + 40px)}
+.sheet-in{max-width:640px;margin:0 auto;padding:calc(var(--st) + 10px) 16px 32px}
 .bar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}
 .btn{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 14px;font-weight:600}
 .btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
@@ -102,6 +109,7 @@ textarea.in{min-height:80px;resize:vertical}
 <nav class="tabs" id="tabs">
   <button data-v="ludzie" class="on"><span>☺</span>Ludzie</button>
   <button data-v="rodziny"><span>👪</span>Rodziny</button>
+  <button data-v="grupy"><span>🏷</span>Grupy</button>
   <button data-v="daty"><span>🎂</span>Nadchodzące</button>
   <button data-v="ust"><span>⚙</span>Ustawienia</button>
 </nav>
@@ -146,33 +154,51 @@ function nadchodzace(limit=60){const out=[];S.osoby.forEach(o=>{[['urodziny','Ur
 const stack=[];
 function openSheet(html){const d=document.createElement('div');d.className='sheet';d.innerHTML=`<div class="sheet-in">${html}</div>`;document.body.appendChild(d);stack.push(d);history.pushState({s:stack.length},'');requestAnimationFrame(()=>d.classList.add('on'));return d}
 const closeSheet=()=>history.back();
-addEventListener('popstate',()=>{const d=stack.pop();if(d){d.classList.remove('on');setTimeout(()=>d.remove(),180)}});
+addEventListener('popstate',e=>{const n=(e.state&&e.state.s)||0;while(stack.length>n){const d=stack.pop();d.classList.remove('on');setTimeout(()=>d.remove(),180)}});
 
 /* ========= widoki główne ========= */
 function render(){
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.view));
   $('#fab').style.display=S.view==='ludzie'?'':'none';
-  ({ludzie:vLudzie,rodziny:vRodziny,daty:vDaty,ust:vUst})[S.view]();
+  ({ludzie:vLudzie,rodziny:vRodziny,grupy:vGrupy,daty:vDaty,ust:vUst})[S.view]();
 }
+const listaGrup=()=>{const m={};S.osoby.forEach(o=>grupyOf(o).forEach(g=>(m[g]=m[g]||[]).push(o.id)));return Object.entries(m).sort((a,b)=>a[0].localeCompare(b[0],'pl'))};
+const faceHtml=o=>`<button class="face" data-id="${o.id}">${img(o)}<b>${h(o.imie)}</b><small>${h(o.nazwisko)||'&nbsp;'}</small></button>`;
+const stackHtml=ids=>`<div class="stack">${ids.slice(0,4).map(i=>img(byId(i))).join('')}</div>`;
+const nowsi=(a,b)=>String(b.utworzono).localeCompare(String(a.utworzono));
+function podepnij(root){root.querySelectorAll('.face[data-id]').forEach(b=>b.onclick=()=>otworzOsobe(b.dataset.id));
+  root.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>otworzGrupe(b.dataset.g));
+  root.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>otworzRodzine(b.dataset.f))}
 function vLudzie(){
-  const grupy=[...new Set(S.osoby.flatMap(grupyOf))].sort((a,b)=>a.localeCompare(b,'pl'));
-  const q=norm(S.q);
-  let list=S.osoby.filter(o=>(!S.grupa||grupyOf(o).includes(S.grupa))&&(!q||norm([o.imie,o.nazwisko,o.gdzie,o.kiedy,o.skojarzenie,o.notatki,o.grupy,o.telefon].join(' ')).includes(q)));
-  list.sort(S.sort==='az'?(a,b)=>nazwa(a).localeCompare(nazwa(b),'pl'):(a,b)=>String(b.utworzono).localeCompare(String(a.utworzono)));
-  const dzis=nadchodzace(0);
+  const q=norm(S.q),srt=S.sort==='az'?(a,b)=>nazwa(a).localeCompare(nazwa(b),'pl'):nowsi;
   const focused=document.activeElement&&document.activeElement.id==='q';
-  $('#app').innerHTML=`<div class="top"><h1>Ludzie</h1>
-    <input id="q" class="search" type="search" placeholder="Szukaj: imię, miejsce, skojarzenie…" value="${h(S.q)}">
-    <div class="chips"><button class="chip ${S.sort==='az'?'on':''}" data-sort="az">A–Z</button><button class="chip ${S.sort==='new'?'on':''}" data-sort="new">Ostatnio dodani</button>
-    <button class="chip ${!S.grupa?'on':''}" data-g="">Wszyscy (${S.osoby.length})</button>${grupy.map(g=>`<button class="chip ${S.grupa===g?'on':''}" data-g="${h(g)}">${h(g)}</button>`).join('')}</div></div>
-  <main>${dzis.length?`<div class="today">🎉 Dziś: ${dzis.map(x=>`<b>${h(nazwa(x.o))}</b> (${x.l.toLowerCase()})`).join(', ')}</div>`:''}
-  ${list.length?`<div class="grid">${list.map(o=>`<button class="face" data-id="${o.id}">${img(o)}<b>${h(o.imie)} ${h(o.nazwisko)}</b><small>${h(o.gdzie||grupyOf(o)[0]||'')}</small></button>`).join('')}</div>`
-   :`<p class="empty">${S.osoby.length?'Nikt nie pasuje do wyszukiwania.':'Baza jest pusta. Dodaj pierwszą osobę albo zaimportuj ją z Google Kontaktów w Ustawieniach.'}</p>`}</main>`;
+  let body;
+  if(q){const w=S.osoby.filter(o=>norm([o.imie,o.nazwisko,o.gdzie,o.kiedy,o.skojarzenie,o.notatki,o.grupy,o.telefon].join(' ')).includes(q)).sort(srt);
+    body=`<div class="sec"><h3>Wyniki: ${w.length}</h3></div>${w.length?`<div class="grid">${w.map(faceHtml).join('')}</div>`:'<p class="empty">Nikt nie pasuje do wyszukiwania.</p>'}`}
+  else if(!S.osoby.length)body='<p class="empty">Album jest pusty. Dodaj pierwszą osobę albo zaimportuj kontakty z Google w Ustawieniach.</p>';
+  else{const ost=S.osoby.slice().sort(nowsi).slice(0,10),gr=listaGrup(),rd=rodziny(),dz=nadchodzace(1);
+    body=`<div class="sec"><h3>Ostatnio poznani</h3></div><div class="strip">${ost.map(faceHtml).join('')}</div>
+    ${gr.length||rd.length?`<div class="sec"><h3>Grupy i rodziny</h3></div><div class="strip">${gr.map(([g,ids])=>`<button class="gcard" data-g="${h(g)}">${stackHtml(ids)}<b>${h(g)}</b><small>osób: ${ids.length}</small></button>`).join('')}${rd.map(ids=>`<button class="gcard" data-f="${ids[0]}">${stackHtml(ids)}<b>${h(nazwaRodziny(ids))}</b><small>osób: ${ids.length}</small></button>`).join('')}</div>`:''}
+    ${dz.length?`<div class="today">${dz.map(x=>`${x.d?'Jutro':'Dziś'} ${x.l.toLowerCase()}: <b>${h(nazwa(x.o))}</b>${h(x.extra)}`).join('<br>')}</div>`:''}
+    <div class="sec"><h3>Wszyscy</h3><div class="chips" style="padding:0"><button class="chip ${S.sort==='az'?'on':''}" data-sort="az">A–Z</button><button class="chip ${S.sort==='new'?'on':''}" data-sort="new">Najnowsi</button></div></div>
+    <div class="grid">${S.osoby.slice().sort(srt).map(faceHtml).join('')}</div>`}
+  $('#app').innerHTML=`<div class="top"><div class="hd"><h1>Ludzie</h1><span>osób: ${S.osoby.length}</span></div>
+    <input id="q" class="search" type="search" placeholder="Szukaj: imię, miejsce, skojarzenie…" value="${h(S.q)}"></div><main>${body}</main>`;
   const qi=$('#q');qi.oninput=e=>{S.q=e.target.value;const pos=e.target.selectionStart;vLudzie();const n=$('#q');n.focus();n.setSelectionRange(pos,pos)};
   if(focused){qi.focus();qi.setSelectionRange(qi.value.length,qi.value.length)}
-  document.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{S.grupa=b.dataset.g;vLudzie()});
   document.querySelectorAll('[data-sort]').forEach(b=>b.onclick=()=>{S.sort=b.dataset.sort;vLudzie()});
-  document.querySelectorAll('.face').forEach(b=>b.onclick=()=>otworzOsobe(b.dataset.id));
+  podepnij($('#app'));
+}
+function vGrupy(){
+  const gr=listaGrup();
+  $('#app').innerHTML=`<div class="top"><h1>Grupy</h1><p style="margin:0;color:var(--muted)">Grupy nadajesz w formularzu osoby, np. „Klasa 1A”.</p></div><main>${gr.length?gr.map(([g,ids])=>`<button class="row pick-row" data-g="${h(g)}">${stackHtml(ids)}<div class="grow"><b>${h(g)}</b><br><small style="color:var(--muted)">osób: ${ids.length}</small></div></button>`).join('')
+   :'<p class="empty">Brak grup. Wpisz grupę w polu „Grupy” przy dodawaniu lub edycji osoby.</p>'}</main>`;
+  podepnij($('#app'));
+}
+function otworzGrupe(g){
+  const l=S.osoby.filter(o=>grupyOf(o).includes(g)).sort((a,b)=>nazwa(a).localeCompare(nazwa(b),'pl'));
+  const d=openSheet(`<div class="bar"><button class="btn" data-x>← Wróć</button></div><h1 class="p-name">${h(g)}</h1><p class="p-sub">osób: ${l.length}</p><div class="grid">${l.map(faceHtml).join('')}</div>`);
+  d.querySelector('[data-x]').onclick=closeSheet;podepnij(d);
 }
 function vDaty(){
   const l=nadchodzace(60);
@@ -309,9 +335,9 @@ function otworzRodzine(id){
 }
 function vRodziny(){
   const l=rodziny().sort((a,b)=>b.length-a.length);
-  $('#app').innerHTML=`<div class="top"><h1>Rodziny</h1><p style="margin:0;color:var(--muted)">Grupy osób połączonych powiązaniami rodzinnymi.</p></div><main>${l.length?l.map(ids=>`<div class="row" data-f="${ids[0]}"><div class="stack">${ids.slice(0,4).map(i=>img(byId(i))).join('')}</div><div class="grow"><b>${h(nazwaRodziny(ids))}</b><br><small style="color:var(--muted)">osób: ${ids.length}</small></div></div>`).join('')
+  $('#app').innerHTML=`<div class="top"><h1>Rodziny</h1><p style="margin:0;color:var(--muted)">Grupy osób połączonych powiązaniami rodzinnymi.</p></div><main>${l.length?l.map(ids=>`<button class="row pick-row" data-f="${ids[0]}"><div class="stack">${ids.slice(0,4).map(i=>img(byId(i))).join('')}</div><div class="grow"><b>${h(nazwaRodziny(ids))}</b><br><small style="color:var(--muted)">osób: ${ids.length}</small></div></button>`).join('')
    :'<p class="empty">Brak rodzin. Dodaj powiązania w karcie osoby lub w formularzu.</p>'}</main>`;
-  document.querySelectorAll('[data-f]').forEach(r=>r.onclick=()=>otworzRodzine(r.dataset.f));
+  podepnij($('#app'));
 }
 
 /* ========= formularz osoby ========= */
@@ -395,7 +421,7 @@ async function importGoogle(){
 }
 
 /* ========= start ========= */
-document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{S.view=b.dataset.v;render();scrollTo(0,0)});
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{if(stack.length)history.go(-stack.length);S.view=b.dataset.v;render();scrollTo(0,0)});
 $('#fab').onclick=()=>formularz(null);
 (async()=>{const c=await idb.get('dane');if(c){S.osoby=c.osoby;S.relacje=c.relacje}
   if(!cfg.url)S.view='ust';render();if(cfg.url)odswiez()})();
