@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ludzie</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2E6F63">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+<style>
+:root{--bg:#EEF1F5;--surface:#fff;--ink:#1C2536;--muted:#5B6679;--line:#D5DBE4;--accent:#2E6F63;--accent-ink:#fff;--warm:#C98F2A;--danger:#B3413A;
+--serif:"Fraunces",Georgia,serif;--sans:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+--st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root{--bg:#121822;--surface:#1B2330;--ink:#E8ECF2;--muted:#95A0B3;--line:#2C3646;--accent:#5FB3A1;--accent-ink:#0E1A17;--warm:#E2B45A;--danger:#E07A72}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 var(--sans)}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.top{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(var(--st) + 12px) 16px 8px}
+.top h1{font:600 28px/1.1 var(--serif);margin:0 0 10px}
+.search{width:100%;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--surface)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:10px 0 2px;scrollbar-width:none}
+.chip{flex:none;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:14px;white-space:nowrap}
+.chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+main{padding:8px 16px calc(var(--sb) + 150px)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:18px 12px}
+.face{background:none;border:0;padding:0;text-align:center}
+.face .ph{width:100%;aspect-ratio:1;border-radius:30%;background:var(--line);object-fit:cover;display:grid;place-items:center;font:600 30px var(--serif);color:var(--muted)}
+.face b{display:block;font:500 15px/1.2 var(--serif);margin-top:6px}
+.face small{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.empty{color:var(--muted);text-align:center;padding:48px 16px}
+.row{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.row img,.row .ph{width:48px;height:48px;border-radius:30%;object-fit:cover;background:var(--line);flex:none;display:grid;place-items:center;font:600 18px var(--serif);color:var(--muted)}
+.row .grow{flex:1;min-width:0}
+.when{font-weight:700;color:var(--warm);font-size:14px;text-align:right}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;background:var(--surface);border-top:1px solid var(--line);padding-bottom:var(--sb)}
+nav.tabs button{flex:1;border:0;background:none;padding:10px 0 12px;font-size:13px;color:var(--muted)}
+nav.tabs button.on{color:var(--accent);font-weight:700}
+nav.tabs span{display:block;font-size:20px}
+.fab{position:fixed;right:18px;bottom:calc(var(--sb) + 76px);z-index:7;height:56px;padding:0 22px;border-radius:18px;border:0;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:16px;box-shadow:0 6px 18px rgba(20,40,40,.28)}
+.sheet{position:fixed;inset:0;z-index:20;background:var(--bg);overflow-y:auto;transform:translateY(24px);opacity:0;transition:.18s ease}
+.sheet.on{transform:none;opacity:1}
+@media (prefers-reduced-motion:reduce){.sheet{transition:none}}
+.sheet-in{max-width:640px;margin:0 auto;padding:calc(var(--st) + 10px) 16px calc(var(--sb) + 40px)}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 14px;font-weight:600}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.dan{color:var(--danger)}
+.btn.wide{width:100%;margin-top:10px}
+.p-photo{width:min(280px,72vw);aspect-ratio:1;border-radius:30%;object-fit:cover;display:block;margin:4px auto 14px;background:var(--line)}
+.p-name{font:600 34px/1.1 var(--serif);text-align:center;margin:0}
+.p-sub{text-align:center;color:var(--muted);margin:6px 0 14px}
+.acts{display:flex;gap:10px;justify-content:center;margin-bottom:18px}
+.acts a{flex:1;max-width:160px;text-align:center;text-decoration:none;padding:12px;border-radius:14px;background:var(--accent);color:var(--accent-ink);font-weight:700}
+.acts a.sec{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.hint{background:var(--surface);border-left:4px solid var(--warm);border-radius:10px;padding:12px 14px;margin:0 0 14px;font-style:italic}
+dl{margin:0;background:var(--surface);border-radius:14px;padding:4px 14px}
+dl div{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+dl div:last-child{border:0}
+dt{color:var(--muted)}dd{margin:0;text-align:right}
+h2{font:600 20px var(--serif);margin:26px 0 10px}
+.tree{background:var(--surface);border-radius:14px;padding:14px 8px}
+.gen{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;position:relative;padding:4px 0 16px}
+.gen+.gen::before{content:"";position:absolute;top:-14px;left:50%;height:12px;border-left:2px solid var(--line)}
+.gen-l{width:100%;text-align:center;font-size:12px;color:var(--muted);margin-bottom:-4px}
+.node{background:none;border:0;padding:0;width:72px;text-align:center;font-size:12px;line-height:1.2}
+.node img,.node .ph{width:56px;height:56px;border-radius:30%;object-fit:cover;background:var(--line);display:grid;place-items:center;margin:0 auto 4px;font:600 20px var(--serif);color:var(--muted)}
+.node.me img,.node.me .ph{width:72px;height:72px;outline:3px solid var(--accent);outline-offset:2px}
+.node.add .ph{border:2px dashed var(--line);background:none;font:400 26px var(--sans)}
+.rel-list .row{padding:8px 0}
+.x{border:0;background:none;color:var(--muted);font-size:20px;padding:4px 8px}
+label{display:block;margin:12px 0 4px;font-weight:600;font-size:14px}
+label small{font-weight:400;color:var(--muted)}
+.in{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--surface)}
+textarea.in{min-height:80px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.photo-pick{display:flex;gap:14px;align-items:center}
+.photo-pick .prev{width:110px;height:110px;border-radius:30%;object-fit:cover;background:var(--line);flex:none}
+.photo-pick .btns{display:flex;flex-direction:column;gap:8px;flex:1}
+.check{display:flex;gap:10px;align-items:center;margin-top:16px;font-weight:500}
+.check input{width:22px;height:22px;accent-color:var(--accent)}
+.crop-wrap{height:60vh;background:#000;border-radius:14px;overflow:hidden}
+.crop-wrap img{display:block;max-width:100%}
+.toast{position:fixed;left:50%;bottom:calc(var(--sb) + 150px);transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;z-index:50;font-size:14px;max-width:90vw}
+.busy{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.3);display:grid;place-items:center;color:#fff;font-weight:600}
+.pick-row{width:100%;border:0;background:none;text-align:left}
+.pick-row.dis{opacity:.45}
+.para{display:flex;align-items:center;gap:2px;background:var(--bg);border-radius:16px;padding:6px 6px 4px}.heart{color:var(--warm);font-size:14px;margin-top:-18px}
+.stack{display:flex;flex:none}.stack img,.stack .ph{width:40px;height:40px;border-radius:30%;object-fit:cover;background:var(--line);margin-left:-12px;border:2px solid var(--surface);display:grid;place-items:center;font:600 15px var(--serif);color:var(--muted)}.stack>:first-child{margin-left:0}
+.today{background:var(--surface);border-radius:14px;padding:10px 14px;margin:6px 0 14px;border-left:4px solid var(--warm)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<nav class="tabs" id="tabs">
+  <button data-v="ludzie" class="on"><span>☺</span>Ludzie</button>
+  <button data-v="rodziny"><span>👪</span>Rodziny</button>
+  <button data-v="daty"><span>🎂</span>Nadchodzące</button>
+  <button data-v="ust"><span>⚙</span>Ustawienia</button>
+</nav>
+<button class="fab" id="fab">+ Dodaj osobę</button>
+
+<script>
+/* ========= stan i narzędzia ========= */
+const S={osoby:[],relacje:[],q:'',grupa:'',sort:'az',view:'ludzie'};
+let cfg=JSON.parse(localStorage.getItem('cfg')||'{}');
+const $=s=>document.querySelector(s);
+const h=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ł/g,'l');
+const byId=id=>S.osoby.find(o=>o.id===id);
+const nazwa=o=>o?(o.imie+' '+o.nazwisko).trim():'?';
+const ini=o=>h((o.imie||'?')[0]);
+const img=(o,cls='ph')=>o&&o.miniatura?`<img class="${cls}" src="${o.miniatura}" alt="">`:`<div class="ph">${o?ini(o):'+'}</div>`;
+const grupyOf=o=>String(o.grupy||'').split(',').map(s=>s.trim()).filter(Boolean);
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}
+function busy(on,t='Chwila…'){let b=$('.busy');if(on&&!b){b=document.createElement('div');b.className='busy';document.body.appendChild(b)}if(b){if(on)b.textContent=t;else b.remove()}}
+
+/* ========= IndexedDB cache (offline) ========= */
+const idb=(()=>{let db;const open=()=>db||(db=new Promise((r,j)=>{const q=indexedDB.open('ludzie',1);q.onupgradeneeded=()=>q.result.createObjectStore('kv');q.onsuccess=()=>r(q.result);q.onerror=()=>j(q.error)}));
+ const tx=async(m,f)=>{const d=await open();return new Promise((r,j)=>{const t=d.transaction('kv',m);const q=f(t.objectStore('kv'));t.oncomplete=()=>r(q&&q.result);t.onerror=()=>j(t.error)})};
+ return{get:k=>tx('readonly',s=>s.get(k)).catch(()=>null),set:(k,v)=>tx('readwrite',s=>s.put(v,k)).catch(()=>{})}})();
+const zapiszCache=()=>idb.set('dane',{osoby:S.osoby,relacje:S.relacje});
+
+/* ========= API ========= */
+async function api(action,data={}){
+  if(!cfg.url)throw new Error('Uzupełnij ustawienia połączenia');
+  const r=await fetch(cfg.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({token:cfg.token,action,...data})});
+  const j=await r.json(); if(!j.ok)throw new Error(j.error); return j;
+}
+async function odswiez(){try{const j=await api('lista');S.osoby=j.osoby;S.relacje=j.relacje;zapiszCache();render()}catch(e){toast('Tryb offline: '+e.message)}}
+
+/* ========= daty ========= */
+function parseDM(s){const m=String(s||'').trim().match(/^(\d{1,2})[.\-/](\d{1,2})(?:[.\-/](\d{4}))?$/);return m?{d:+m[1],m:+m[2],y:m[3]?+m[3]:null}:null}
+function dniDo(dm){const t=new Date();t.setHours(0,0,0,0);let n=new Date(t.getFullYear(),dm.m-1,dm.d);if(n<t)n=new Date(t.getFullYear()+1,dm.m-1,dm.d);return Math.round((n-t)/864e5)}
+const kiedyTxt=d=>d===0?'dziś':d===1?'jutro':'za '+d+' dni';
+function nadchodzace(limit=60){const out=[];S.osoby.forEach(o=>{[['urodziny','Urodziny'],['imieniny','Imieniny']].forEach(([k,l])=>{const dm=parseDM(o[k]);if(!dm)return;const d=dniDo(dm);if(d<=limit){let extra='';if(k==='urodziny'&&dm.y)extra=` (kończy ${new Date(Date.now()+d*864e5).getFullYear()-dm.y})`;out.push({o,l,d,extra})}})});return out.sort((a,b)=>a.d-b.d)}
+
+/* ========= nawigacja arkuszy + przycisk Wstecz Androida ========= */
+const stack=[];
+function openSheet(html){const d=document.createElement('div');d.className='sheet';d.innerHTML=`<div class="sheet-in">${html}</div>`;document.body.appendChild(d);stack.push(d);history.pushState({s:stack.length},'');requestAnimationFrame(()=>d.classList.add('on'));return d}
+const closeSheet=()=>history.back();
+addEventListener('popstate',()=>{const d=stack.pop();if(d){d.classList.remove('on');setTimeout(()=>d.remove(),180)}});
+
+/* ========= widoki główne ========= */
+function render(){
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.view));
+  $('#fab').style.display=S.view==='ludzie'?'':'none';
+  ({ludzie:vLudzie,rodziny:vRodziny,daty:vDaty,ust:vUst})[S.view]();
+}
+function vLudzie(){
+  const grupy=[...new Set(S.osoby.flatMap(grupyOf))].sort((a,b)=>a.localeCompare(b,'pl'));
+  const q=norm(S.q);
+  let list=S.osoby.filter(o=>(!S.grupa||grupyOf(o).includes(S.grupa))&&(!q||norm([o.imie,o.nazwisko,o.gdzie,o.kiedy,o.skojarzenie,o.notatki,o.grupy,o.telefon].join(' ')).includes(q)));
+  list.sort(S.sort==='az'?(a,b)=>nazwa(a).localeCompare(nazwa(b),'pl'):(a,b)=>String(b.utworzono).localeCompare(String(a.utworzono)));
+  const dzis=nadchodzace(0);
+  const focused=document.activeElement&&document.activeElement.id==='q';
+  $('#app').innerHTML=`<div class="top"><h1>Ludzie</h1>
+    <input id="q" class="search" type="search" placeholder="Szukaj: imię, miejsce, skojarzenie…" value="${h(S.q)}">
+    <div class="chips"><button class="chip ${S.sort==='az'?'on':''}" data-sort="az">A–Z</button><button class="chip ${S.sort==='new'?'on':''}" data-sort="new">Ostatnio dodani</button>
+    <button class="chip ${!S.grupa?'on':''}" data-g="">Wszyscy (${S.osoby.length})</button>${grupy.map(g=>`<button class="chip ${S.grupa===g?'on':''}" data-g="${h(g)}">${h(g)}</button>`).join('')}</div></div>
+  <main>${dzis.length?`<div class="today">🎉 Dziś: ${dzis.map(x=>`<b>${h(nazwa(x.o))}</b> (${x.l.toLowerCase()})`).join(', ')}</div>`:''}
+  ${list.length?`<div class="grid">${list.map(o=>`<button class="face" data-id="${o.id}">${img(o)}<b>${h(o.imie)} ${h(o.nazwisko)}</b><small>${h(o.gdzie||grupyOf(o)[0]||'')}</small></button>`).join('')}</div>`
+   :`<p class="empty">${S.osoby.length?'Nikt nie pasuje do wyszukiwania.':'Baza jest pusta. Dodaj pierwszą osobę albo zaimportuj ją z Google Kontaktów w Ustawieniach.'}</p>`}</main>`;
+  const qi=$('#q');qi.oninput=e=>{S.q=e.target.value;const pos=e.target.selectionStart;vLudzie();const n=$('#q');n.focus();n.setSelectionRange(pos,pos)};
+  if(focused){qi.focus();qi.setSelectionRange(qi.value.length,qi.value.length)}
+  document.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{S.grupa=b.dataset.g;vLudzie()});
+  document.querySelectorAll('[data-sort]').forEach(b=>b.onclick=()=>{S.sort=b.dataset.sort;vLudzie()});
+  document.querySelectorAll('.face').forEach(b=>b.onclick=()=>otworzOsobe(b.dataset.id));
+}
+function vDaty(){
+  const l=nadchodzace(60);
+  $('#app').innerHTML=`<div class="top"><h1>Nadchodzące</h1><p style="margin:0;color:var(--muted)">Urodziny i imieniny w najbliższych 60 dniach. Przypomnienie przychodzi też e-mailem rano w dniu święta i 3 dni wcześniej.</p></div>
+  <main>${l.length?l.map(x=>`<div class="row" data-id="${x.o.id}">${img(x.o)}<div class="grow"><b>${h(nazwa(x.o))}</b><br><small style="color:var(--muted)">${x.l}${h(x.extra)}</small></div><div class="when">${kiedyTxt(x.d)}</div></div>`).join('')
+   :'<p class="empty">Brak dat w najbliższych 60 dniach. Dodaj urodziny lub imieniny w karcie osoby.</p>'}</main>`;
+  document.querySelectorAll('.row[data-id]').forEach(r=>r.onclick=()=>otworzOsobe(r.dataset.id));
+}
+function vUst(){
+  $('#app').innerHTML=`<div class="top"><h1>Ustawienia</h1></div><main>
+  <label>Adres aplikacji Apps Script <small>(kończy się na /exec)</small></label><input class="in" id="u-url" value="${h(cfg.url||'')}" placeholder="https://script.google.com/macros/s/…/exec">
+  <label>Token dostępu <small>(z logu funkcji setup)</small></label><input class="in" id="u-tok" value="${h(cfg.token||'')}">
+  <button class="btn pri wide" id="u-save">Zapisz i połącz</button>
+  <h2>Google Kontakty</h2><p style="color:var(--muted);margin:0">Wybierz kontakty do przeniesienia. Imię, telefon, urodziny i zdjęcie przejdą automatycznie.</p>
+  <button class="btn wide" id="u-imp">Importuj z Google Kontaktów</button>
+  <h2>Dane</h2><p style="color:var(--muted);margin:0">Osób: ${S.osoby.length}, powiązań: ${S.relacje.length}.</p>
+  <button class="btn wide" id="u-ref">Odśwież z serwera</button>
+  <button class="btn wide" id="u-fix">Uzupełnij powiązania rodzinne</button><p style="color:var(--muted);font-size:14px">Dopisuje brakujące powiązania, np. dzieci Marcina także jego partnerce.</p></main>`;
+  $('#u-save').onclick=async()=>{cfg={url:$('#u-url').value.trim(),token:$('#u-tok').value.trim()};localStorage.setItem('cfg',JSON.stringify(cfg));busy(true,'Łączę…');try{await api('lista');busy(false);toast('Połączono');S.view='ludzie';odswiez()}catch(e){busy(false);toast('Błąd: '+e.message)}};
+  $('#u-imp').onclick=importGoogle; $('#u-fix').onclick=async()=>{busy(true,'Uzupełniam…');try{const n=await dodajRelacje(S.relacje.flatMap(uzupelnienia).map(x=>({...x,auto:true})));busy(false);toast(n?'Dodano powiązań: '+n:'Wszystko było kompletne')}catch(e){busy(false);toast(e.message)}};
+  $('#u-ref').onclick=async()=>{busy(true);await odswiez();busy(false);toast('Odświeżono')};
+}
+
+/* ========= rodzina ========= */
+const relOf=(id,typ)=>S.relacje.filter(r=>r.typ===typ&&(r.a===id||r.b===id));
+const rodzice=id=>S.relacje.filter(r=>r.typ==='rodzic'&&r.b===id).map(r=>r.a);
+const dzieci=id=>S.relacje.filter(r=>r.typ==='rodzic'&&r.a===id).map(r=>r.b);
+const partnerzy=id=>relOf(id,'malzonek').map(r=>r.a===id?r.b:r.a);
+const rodzenstwo=id=>[...new Set([...relOf(id,'rodzenstwo').map(r=>r.a===id?r.b:r.a),...rodzice(id).flatMap(dzieci)])].filter(x=>x!==id);
+const uniq=a=>[...new Set(a)];
+function opisRelacji(r,id){const inny=byId(r.a===id?r.b:r.a);let t;
+  if(r.typ==='rodzic')t=r.b===id?'rodzic':'dziecko';else if(r.typ==='malzonek')t='partner / małżonek';else t='rodzeństwo';return{inny,t}}
+
+const node=(pid,cls='')=>{const o=byId(pid);return o?`<button class="node ${cls}" data-go="${pid}">${img(o)}${h(o.imie)}</button>`:''};
+function drzewo(id){
+  const rp=rodzice(id),dz=uniq([...dzieci(id),...partnerzy(id).flatMap(dzieci)]);
+  const dziadkowie=uniq(rp.flatMap(rodzice)),wnuki=uniq(dz.flatMap(dzieci));
+  const add=(rel,label)=>`<button class="node add" data-add="${rel}"><div class="ph">+</div>${label}</button>`;
+  const gen=(label,items)=>`<div class="gen"><div class="gen-l">${label}</div>${items}</div>`;
+  let html='';
+  if(dziadkowie.length)html+=gen('Dziadkowie',dziadkowie.map(x=>node(x)).join(''));
+  html+=gen('Rodzice',rp.map(x=>node(x)).join('')+(rp.length<2?add('rodzic','rodzic'):''));
+  html+=gen('Rodzeństwo i partner',rodzenstwo(id).map(x=>node(x)).join('')+node(id,'me')+partnerzy(id).map(x=>node(x)).join('')+add('rodzenstwo','rodzeństwo')+(partnerzy(id).length?'':add('malzonek','partner')));
+  html+=gen('Dzieci',dz.map(x=>node(x)).join('')+add('dziecko','dziecko'));
+  if(wnuki.length)html+=gen('Wnuki',wnuki.map(x=>node(x)).join(''));
+  return `<div class="tree">${html}</div>`;
+}
+
+/* ========= karta osoby ========= */
+function otworzOsobe(id){
+  const o=byId(id);if(!o)return;
+  const tel=String(o.telefon||'').replace(/[^\d+]/g,'');
+  const ur=parseDM(o.urodziny),im=parseDM(o.imieniny);
+  const wiek=ur&&ur.y?(()=>{const dd=dniDo(ur);return ` (${new Date(Date.now()+dd*864e5).getFullYear()-ur.y-(dd?1:0)} l.)`})():'';
+  const rels=S.relacje.filter(r=>r.a===id||r.b===id);
+  const d=openSheet(`<div class="bar"><button class="btn" data-x>← Wróć</button><button class="btn" data-edit>Edytuj</button></div>
+   ${o.miniatura?`<img class="p-photo" id="pf" src="${o.miniatura}" alt="">`:`<div class="p-photo" style="display:grid;place-items:center;font:600 80px var(--serif);color:var(--muted)">${ini(o)}</div>`}
+   <h1 class="p-name">${h(nazwa(o))}</h1>
+   <p class="p-sub">${o.gdzie||o.kiedy?'Poznany: '+h([o.gdzie,o.kiedy].filter(Boolean).join(', ')):'&nbsp;'}</p>
+   ${tel?`<div class="acts"><a href="tel:${tel}">Zadzwoń</a><a class="sec" href="sms:${tel}">SMS</a></div>`:''}
+   ${o.skojarzenie?`<p class="hint">${h(o.skojarzenie)}</p>`:''}
+   <dl>${tel?`<div><dt>Telefon</dt><dd>${h(o.telefon)}</dd></div>`:''}
+   ${ur?`<div><dt>Urodziny</dt><dd>${h(o.urodziny)}${wiek}, ${kiedyTxt(dniDo(ur))}</dd></div>`:''}
+   ${im?`<div><dt>Imieniny</dt><dd>${h(o.imieniny)}, ${kiedyTxt(dniDo(im))}</dd></div>`:''}
+   ${grupyOf(o).length?`<div><dt>Grupy</dt><dd>${grupyOf(o).map(h).join(', ')}</dd></div>`:''}
+   ${o.notatki?`<div style="display:block"><dt>Notatki</dt><dd style="text-align:left;white-space:pre-wrap;margin-top:4px">${h(o.notatki)}</dd></div>`:''}</dl>
+   <h2>Rodzina</h2>${drzewo(id)}${S.relacje.some(r=>r.a===id||r.b===id)?'<button class="btn wide" data-fam>👪 Pokaż całą rodzinę</button>':''}
+   ${rels.length?`<div class="rel-list">${rels.map(r=>{const x=opisRelacji(r,id);return `<div class="row"><div class="grow">${h(nazwa(x.inny))} <small style="color:var(--muted)">— ${x.t}</small></div><button class="x" data-rdel="${r.id}" aria-label="Usuń powiązanie">×</button></div>`}).join('')}</div>`:''}
+   <h2>Google Kontakty</h2>${o.google?'<p style="color:var(--muted)">Ta osoba jest w Twoich Google Kontaktach.</p>':'<button class="btn wide" data-gexp>Dodaj do Google Kontaktów</button>'}
+   <button class="btn dan wide" data-del>Usuń osobę</button>`);
+  if(o.foto)(async()=>{let b=await idb.get('f:'+o.foto);if(!b)try{b='data:image/jpeg;base64,'+(await api('foto',{id:o.foto})).b64;idb.set('f:'+o.foto,b)}catch(e){}const p=d.querySelector('#pf');if(b&&p)p.src=b})();
+  d.querySelector('[data-x]').onclick=closeSheet;
+  d.querySelector('[data-edit]').onclick=()=>formularz(o);
+  d.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{if(b.dataset.go!==id)otworzOsobe(b.dataset.go)});
+  const fm=d.querySelector('[data-fam]');if(fm)fm.onclick=()=>otworzRodzine(id);
+  d.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>wybierzPowiazanie(id,b.dataset.add));
+  d.querySelectorAll('[data-rdel]').forEach(b=>b.onclick=async()=>{if(!confirm('Usunąć to powiązanie?'))return;busy(true);try{await api('relacjaUsun',{id:b.dataset.rdel});S.relacje=S.relacje.filter(r=>r.id!==b.dataset.rdel);zapiszCache();busy(false);przeladujOsobe(id)}catch(e){busy(false);toast(e.message)}});
+  const ge=d.querySelector('[data-gexp]');if(ge)ge.onclick=async()=>{busy(true,'Dodaję do Google…');try{const j=await api('googleEksport',{id});o.google=j.google;zapiszCache();busy(false);toast('Dodano do Google Kontaktów');przeladujOsobe(id)}catch(e){busy(false);toast(e.message)}};
+  d.querySelector('[data-del]').onclick=async()=>{if(!confirm('Usunąć '+nazwa(o)+' wraz ze zdjęciem i powiązaniami?'))return;busy(true);try{await api('usun',{id});S.osoby=S.osoby.filter(x=>x.id!==id);S.relacje=S.relacje.filter(r=>r.a!==id&&r.b!==id);zapiszCache();busy(false);closeSheet();render()}catch(e){busy(false);toast(e.message)}};
+}
+function przeladujOsobe(id){closeSheet();setTimeout(()=>otworzOsobe(id),200);render()}
+
+/* ========= powiązania z automatycznym uzupełnianiem rodziny ========= */
+const RELN={rodzic:'Rodzic',dziecko:'Dziecko',malzonek:'Partner / małżonek',rodzenstwo:'Rodzeństwo'};
+const relDef=(rel,id,inny)=>rel==='rodzic'?{a:inny,typ:'rodzic',b:id}:rel==='dziecko'?{a:id,typ:'rodzic',b:inny}:{a:id,typ:rel,b:inny};
+const jest=r=>S.relacje.some(x=>x.typ===r.typ&&((x.a===r.a&&x.b===r.b)||(r.typ!=='rodzic'&&x.a===r.b&&x.b===r.a)));
+function uzupelnienia(r){const out=[];
+  if(r.typ==='rodzic')partnerzy(r.a).forEach(q=>out.push({a:q,typ:'rodzic',b:r.b}));
+  if(r.typ==='malzonek'){dzieci(r.a).forEach(c=>out.push({a:r.b,typ:'rodzic',b:c}));dzieci(r.b).forEach(c=>out.push({a:r.a,typ:'rodzic',b:c}))}
+  if(r.typ==='rodzenstwo'){const pa=rodzice(r.a),pb=rodzice(r.b);if(pa.length&&!pb.length)pa.forEach(x=>out.push({a:x,typ:'rodzic',b:r.b}));if(pb.length&&!pa.length)pb.forEach(x=>out.push({a:x,typ:'rodzic',b:r.a}))}
+  return out}
+async function dodajRelacje(lista){const q=[...lista];let auto=0,n=0;
+  while(q.length&&n++<200){const r=q.shift();
+    if(r.a===r.b||jest(r)||!byId(r.a)||!byId(r.b))continue;
+    if(r.auto&&r.typ==='rodzic'&&rodzice(r.b).length>=2)continue;
+    const j=await api('relacjaDodaj',{a:r.a,typ:r.typ,b:r.b});S.relacje.push(j.relacja);if(r.auto)auto++;
+    uzupelnienia(r).forEach(x=>q.push({...x,auto:true}))}
+  zapiszCache();return auto}
+function wybierzOsobe(tytul,wyklucz,cb,nowa){
+  const d=openSheet(`<div class="bar"><button class="btn" data-x>← Wróć</button></div><h1 class="p-name" style="text-align:left;font-size:26px">${tytul}</h1>
+   ${nowa?'<button class="btn pri wide" data-new>+ Nowa osoba</button>':''}<input class="search" style="margin-top:12px" placeholder="Szukaj…" data-q><div data-list></div>`);
+  const lista=()=>{const q=norm(d.querySelector('[data-q]').value);d.querySelector('[data-list]').innerHTML=S.osoby.filter(o=>!wyklucz.includes(o.id)&&(!q||norm(nazwa(o)+' '+o.grupy).includes(q))).sort((a,b)=>nazwa(a).localeCompare(nazwa(b),'pl'))
+    .map(o=>`<button class="pick-row row" data-p="${o.id}">${img(o)}<div class="grow">${h(nazwa(o))}<br><small style="color:var(--muted)">${h(o.grupy)}</small></div></button>`).join('');
+    d.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>cb(b.dataset.p))};
+  d.querySelector('[data-q]').oninput=lista;lista();
+  d.querySelector('[data-x]').onclick=closeSheet;
+  if(nowa)d.querySelector('[data-new]').onclick=nowa;
+}
+function wybierzPowiazanie(id,rel){
+  const polacz=async inny=>{busy(true);try{const n=await dodajRelacje([relDef(rel,id,inny)]);busy(false);if(n)toast('Uzupełniono też powiązań w rodzinie: '+n);closeSheet();setTimeout(()=>przeladujOsobe(id),220)}catch(e){busy(false);toast(e.message)}};
+  wybierzOsobe(RELN[rel]+' dla: '+h(nazwa(byId(id))),[id],polacz,()=>formularz(null,nowa=>{closeSheet();setTimeout(()=>polacz(nowa.id),220)}));
+}
+function wybierzTyp(cb){
+  const d=openSheet(`<div class="bar"><button class="btn" data-x>← Wróć</button></div><h1 class="p-name" style="text-align:left;font-size:26px">Rodzaj powiązania</h1>
+   ${Object.entries(RELN).map(([k,v])=>`<button class="btn wide" data-t="${k}">${v}</button>`).join('')}`);
+  d.querySelector('[data-x]').onclick=closeSheet;
+  d.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{closeSheet();setTimeout(()=>cb(b.dataset.t),220)});
+}
+
+/* ========= widok całej rodziny ========= */
+function skladowa(id){const seen=new Set([id]),q=[id];while(q.length){const x=q.shift();S.relacje.forEach(r=>{const y=r.a===x?r.b:r.b===x?r.a:null;if(y&&!seen.has(y)&&byId(y)){seen.add(y);q.push(y)}})}return[...seen]}
+function pokolenia(ids){const g={[ids[0]]:0},q=[ids[0]];while(q.length){const x=q.shift();S.relacje.forEach(r=>{let y,d;if(r.a===x){y=r.b;d=r.typ==='rodzic'?1:0}else if(r.b===x){y=r.a;d=r.typ==='rodzic'?-1:0}else return;if(y in g||!byId(y))return;g[y]=g[x]+d;q.push(y)})}
+  const m=Math.min(...Object.values(g));const rows=[];Object.entries(g).forEach(([k,v])=>(rows[v-m]=rows[v-m]||[]).push(k));return rows.filter(Boolean)}
+function uloz(row){const used=new Set(),out=[];const key=x=>rodzice(x).slice().sort().join()||'~'+x;
+  row.slice().sort((a,b)=>key(a).localeCompare(key(b))||nazwa(byId(a)).localeCompare(nazwa(byId(b)),'pl')).forEach(x=>{if(used.has(x))return;used.add(x);const pp=partnerzy(x).filter(p=>row.includes(p)&&!used.has(p));pp.forEach(p=>used.add(p));out.push([x,...pp])});return out}
+function rodziny(){const done=new Set(),out=[];S.osoby.forEach(o=>{if(done.has(o.id))return;const ids=skladowa(o.id);ids.forEach(i=>done.add(i));if(ids.length>1)out.push(ids)});return out}
+function nazwaRodziny(ids){const c={};ids.forEach(i=>{const n=byId(i).nazwisko;if(n)c[n]=(c[n]||0)+1});const t=Object.entries(c).sort((a,b)=>b[1]-a[1])[0];return 'Rodzina '+(t?t[0]:byId(ids[0]).imie)}
+function otworzRodzine(id){
+  const ids=skladowa(id),rows=pokolenia(ids);
+  const d=openSheet(`<div class="bar"><button class="btn" data-x>← Wróć</button></div><h1 class="p-name">${h(nazwaRodziny(ids))}</h1><p class="p-sub">osób: ${ids.length}, pokoleń: ${rows.length}</p>
+   <div class="tree">${rows.map((row,i)=>`<div class="gen"><div class="gen-l">Pokolenie ${i+1}</div>${uloz(row).map(p=>`<div class="para">${p.map(x=>node(x,x===id?'me':'')).join('<span class="heart">♥</span>')}</div>`).join('')}</div>`).join('')}</div>`);
+  d.querySelector('[data-x]').onclick=closeSheet;
+  d.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>otworzOsobe(b.dataset.go));
+}
+function vRodziny(){
+  const l=rodziny().sort((a,b)=>b.length-a.length);
+  $('#app').innerHTML=`<div class="top"><h1>Rodziny</h1><p style="margin:0;color:var(--muted)">Grupy osób połączonych powiązaniami rodzinnymi.</p></div><main>${l.length?l.map(ids=>`<div class="row" data-f="${ids[0]}"><div class="stack">${ids.slice(0,4).map(i=>img(byId(i))).join('')}</div><div class="grow"><b>${h(nazwaRodziny(ids))}</b><br><small style="color:var(--muted)">osób: ${ids.length}</small></div></div>`).join('')
+   :'<p class="empty">Brak rodzin. Dodaj powiązania w karcie osoby lub w formularzu.</p>'}</main>`;
+  document.querySelectorAll('[data-f]').forEach(r=>r.onclick=()=>otworzRodzine(r.dataset.f));
+}
+
+/* ========= formularz osoby ========= */
+function formularz(o,poZapisie){
+  const nowa=!o;o=o||{};let foto=null,mini=null;const pend=[];
+  const grupy=[...new Set(S.osoby.flatMap(grupyOf))];
+  const picker='contacts' in navigator&&'ContactsManager' in window;
+  const d=openSheet(`<div class="bar"><button class="btn" data-x>Anuluj</button><button class="btn pri" data-save>Zapisz</button></div>
+   <h1 class="p-name" style="text-align:left;font-size:26px">${nowa?'Nowa osoba':'Edycja'}</h1>
+   <label>Zdjęcie twarzy</label><div class="photo-pick"><img class="prev" data-prev ${o.miniatura?`src="${o.miniatura}"`:'style="visibility:hidden"'} alt=""><div class="btns">
+     <button class="btn" data-cam>📷 Aparat</button><button class="btn" data-gal>🖼 Galeria</button></div></div>
+   <input type="file" accept="image/*" capture="environment" hidden data-fcam><input type="file" accept="image/*" hidden data-fgal>
+   ${picker?'<button class="btn wide" data-pick>📇 Pobierz imię i numer z kontaktów telefonu</button>':''}
+   <div class="two"><div><label>Imię</label><input class="in" name="imie" value="${h(o.imie)}" autocomplete="off"></div><div><label>Nazwisko</label><input class="in" name="nazwisko" value="${h(o.nazwisko)}" autocomplete="off"></div></div>
+   <label>Telefon</label><input class="in" name="telefon" type="tel" value="${h(o.telefon)}">
+   <label>Gdzie poznany</label><input class="in" name="gdzie" value="${h(o.gdzie)}" placeholder="np. wywiadówka 3B, siłownia">
+   <label>Kiedy poznany</label><input class="in" name="kiedy" value="${h(o.kiedy)}" placeholder="np. wrzesień 2026">
+   <label>Skojarzenie <small>— coś, co pomoże przypomnieć sobie tę osobę</small></label><input class="in" name="skojarzenie" value="${h(o.skojarzenie)}" placeholder="np. wysoki, rude włosy, jeździ czerwonym Passatem">
+   <label>Grupy <small>— oddziel przecinkami</small></label><input class="in" name="grupy" list="gl" value="${h(o.grupy)}" placeholder="np. Klasa 3B, Rodzina"><datalist id="gl">${grupy.map(g=>`<option value="${h(g)}">`).join('')}</datalist>
+   <div class="two"><div><label>Urodziny <small>DD.MM.RRRR</small></label><input class="in" name="urodziny" inputmode="decimal" value="${h(o.urodziny)}" placeholder="12.05.1985"></div>
+   <div><label>Imieniny <small>DD.MM</small></label><input class="in" name="imieniny" inputmode="decimal" value="${h(o.imieniny)}" placeholder="30.11"></div></div>
+   <label>Notatki</label><textarea class="in" name="notatki">${h(o.notatki)}</textarea>
+   ${poZapisie?'':'<h2>Powiązania rodzinne</h2><div data-rels></div><button class="btn wide" data-radd>+ Dodaj powiązanie</button>'}
+   ${o.google?'':'<label class="check"><input type="checkbox" data-gexp> Dodaj też do Google Kontaktów</label>'}`);
+  const f=n=>d.querySelector(`[name="${n}"]`);
+  d.querySelector('[data-x]').onclick=closeSheet;
+  d.querySelector('[data-cam]').onclick=()=>d.querySelector('[data-fcam]').click();
+  d.querySelector('[data-gal]').onclick=()=>d.querySelector('[data-fgal]').click();
+  const wybrano=e=>{const file=e.target.files[0];e.target.value='';if(!file)return;const r=new FileReader();r.onload=()=>kadruj(r.result,(full,m)=>{foto=full;mini=m;const p=d.querySelector('[data-prev]');p.src=m;p.style.visibility=''});r.readAsDataURL(file)};
+  d.querySelector('[data-fcam]').onchange=wybrano;d.querySelector('[data-fgal]').onchange=wybrano;
+  const pk=d.querySelector('[data-pick]');if(pk)pk.onclick=async()=>{try{const[c]=await navigator.contacts.select(['name','tel'],{multiple:false});if(!c)return;const n=(c.name&&c.name[0]||'').trim().split(/\s+/);f('imie').value=n.shift()||'';f('nazwisko').value=n.join(' ');if(c.tel&&c.tel[0])f('telefon').value=c.tel[0]}catch(e){}};
+  const rysujPend=()=>{const el=d.querySelector('[data-rels]');if(!el)return;el.innerHTML=pend.map((p,i)=>`<div class="row">${img(byId(p.id))}<div class="grow">${h(nazwa(byId(p.id)))}<br><small style="color:var(--muted)">${RELN[p.rel]}</small></div><button class="x" data-pdel="${i}">×</button></div>`).join('');
+    el.querySelectorAll('[data-pdel]').forEach(b=>b.onclick=()=>{pend.splice(+b.dataset.pdel,1);rysujPend()})};
+  const ra=d.querySelector('[data-radd]');if(ra)ra.onclick=()=>wybierzTyp(rel=>wybierzOsobe(RELN[rel],[o.id,...pend.map(p=>p.id)].filter(Boolean),inny=>{pend.push({rel,id:inny});closeSheet();rysujPend()}));
+  d.querySelector('[data-save]').onclick=async()=>{
+    const os={...o};['imie','nazwisko','telefon','gdzie','kiedy','skojarzenie','grupy','urodziny','imieniny','notatki'].forEach(k=>os[k]=f(k).value.trim());
+    os.grupy=grupyOf(os).join(', ');
+    if(!os.imie){toast('Wpisz imię');return}
+    for(const k of['urodziny','imieniny'])if(os[k]&&!parseDM(os[k])){toast('Zły format daty: '+k+' (użyj DD.MM lub DD.MM.RRRR)');return}
+    const payload={osoba:os,eksport:!!(d.querySelector('[data-gexp]')||{}).checked};
+    if(foto){payload.fotoB64=foto.split(',')[1];payload.miniB64=mini}
+    busy(true,'Zapisuję…');
+    try{const j=await api('zapisz',payload);const i=S.osoby.findIndex(x=>x.id===j.osoba.id);if(i>=0)S.osoby[i]=j.osoba;else S.osoby.push(j.osoba);
+      if(foto)idb.set('f:'+j.osoba.foto,foto);
+      if(pend.length){busy(true,'Łączę z rodziną…');const n=await dodajRelacje(pend.map(p=>relDef(p.rel,j.osoba.id,p.id)));if(n)toast('Uzupełniono też powiązań: '+n)}
+      zapiszCache();busy(false);toast('Zapisano');render();
+      if(poZapisie)poZapisie(j.osoba);else{closeSheet();if(!nowa)setTimeout(()=>przeladujOsobe(j.osoba.id),220)}}
+    catch(e){busy(false);toast('Błąd zapisu: '+e.message)}};
+}
+
+/* ========= kadrowanie + kompresja 800x800 ========= */
+function kadruj(src,done){
+  const d=openSheet(`<div class="bar"><button class="btn" data-x>Anuluj</button><button class="btn" data-rot>↻ Obróć</button><button class="btn pri" data-ok>Użyj</button></div>
+   <div class="crop-wrap"><img data-img alt=""></div><p style="color:var(--muted);text-align:center">Przesuń i przybliż palcami, żeby twarz wypełniła kwadrat.</p>`);
+  const im=d.querySelector('[data-img]');let cr;
+  im.onload=()=>{cr=new Cropper(im,{aspectRatio:1,viewMode:1,dragMode:'move',autoCropArea:.85,background:false,guides:false})};im.src=src;
+  d.querySelector('[data-x]').onclick=closeSheet;
+  d.querySelector('[data-rot]').onclick=()=>cr&&cr.rotate(90);
+  d.querySelector('[data-ok]').onclick=()=>{
+    const c=cr.getCroppedCanvas({maxWidth:800,maxHeight:800,imageSmoothingQuality:'high',fillColor:'#fff'});
+    const full=c.toDataURL('image/jpeg',.82);
+    const m=document.createElement('canvas');m.width=m.height=200;m.getContext('2d').drawImage(c,0,0,200,200);
+    done(full,m.toDataURL('image/jpeg',.72));closeSheet()};
+}
+
+/* ========= import z Google Kontaktów ========= */
+async function importGoogle(){
+  busy(true,'Pobieram listę kontaktów…');let k;
+  try{k=(await api('googleLista')).kontakty}catch(e){busy(false);toast(e.message);return}busy(false);
+  const sel=new Set();
+  const d=openSheet(`<div class="bar"><button class="btn" data-x>← Wróć</button><button class="btn pri" data-go>Importuj (0)</button></div>
+   <h1 class="p-name" style="text-align:left;font-size:26px">Google Kontakty</h1><input class="search" style="margin-top:12px" placeholder="Szukaj…" data-q><div data-list></div>`);
+  const lista=()=>{const q=norm(d.querySelector('[data-q]').value);d.querySelector('[data-list]').innerHTML=k.filter(c=>!q||norm(c.nazwa+' '+c.tel).includes(q)).slice(0,300)
+    .map(c=>`<label class="row check ${c.juz?'pick-row dis':''}" style="margin:0"><input type="checkbox" data-rn="${h(c.rn)}" ${sel.has(c.rn)?'checked':''} ${c.juz?'disabled':''}><div class="grow">${h(c.nazwa)}<br><small style="color:var(--muted)">${h(c.tel)}${c.maFoto?' 📷':''}${c.juz?' (już w bazie)':''}</small></div></label>`).join('');
+    d.querySelectorAll('[data-rn]').forEach(i=>i.onchange=()=>{i.checked?sel.add(i.dataset.rn):sel.delete(i.dataset.rn);d.querySelector('[data-go]').textContent=`Importuj (${sel.size})`})};
+  d.querySelector('[data-q]').oninput=lista;lista();
+  d.querySelector('[data-x]').onclick=closeSheet;
+  d.querySelector('[data-go]').onclick=async()=>{const rns=[...sel];if(!rns.length)return;let n=0;
+    try{for(let i=0;i<rns.length;i+=25){busy(true,`Importuję ${i+1}–${Math.min(i+25,rns.length)} z ${rns.length}…`);const j=await api('googleImport',{rns:rns.slice(i,i+25)});S.osoby.push(...j.osoby);n+=j.osoby.length}
+      zapiszCache();busy(false);toast('Zaimportowano: '+n);closeSheet();S.view='ludzie';render()}catch(e){busy(false);zapiszCache();toast('Przerwano po '+n+': '+e.message)}};
+}
+
+/* ========= start ========= */
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{S.view=b.dataset.v;render();scrollTo(0,0)});
+$('#fab').onclick=()=>formularz(null);
+(async()=>{const c=await idb.get('dane');if(c){S.osoby=c.osoby;S.relacje=c.relacje}
+  if(!cfg.url)S.view='ust';render();if(cfg.url)odswiez()})();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+</script>
+</body>
+</html>
