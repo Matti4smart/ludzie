@@ -1,4 +1,4 @@
-const V='ludzie-v3';
+const V='ludzie-v4';
 const SHELL=['./','index.html','manifest.webmanifest','icons/icon-192.png','icons/icon-512.png',
  'https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css','https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>c.addAll(SHELL)));self.skipWaiting()});

@@ -267,7 +267,7 @@ function otworzOsobe(id){
    ${o.notatki?`<div style="display:block"><dt>Notatki</dt><dd style="text-align:left;white-space:pre-wrap;margin-top:4px">${h(o.notatki)}</dd></div>`:''}</dl>
    <h2>Rodzina</h2>${drzewo(id)}${S.relacje.some(r=>r.a===id||r.b===id)?'<button class="btn wide" data-fam>👪 Pokaż całą rodzinę</button>':''}
    ${rels.length?`<div class="rel-list">${rels.map(r=>{const x=opisRelacji(r,id);return `<div class="row"><div class="grow">${h(nazwa(x.inny))} <small style="color:var(--muted)">— ${x.t}</small></div><button class="x" data-rdel="${r.id}" aria-label="Usuń powiązanie">×</button></div>`}).join('')}</div>`:''}
-   <h2>Google Kontakty</h2>${o.google?'<p style="color:var(--muted)">Ta osoba jest w Twoich Google Kontaktach.</p>':'<button class="btn wide" data-gexp>Dodaj do Google Kontaktów</button>'}
+   <h2>Google Kontakty</h2>${o.google?'<p style="color:var(--muted);margin:0">Ta osoba jest w Twoich Google Kontaktach. Nowe zdjęcie dodane tutaj trafi też do Google.</p><button class="btn wide" data-gfoto>Pobierz zdjęcie z Google</button>':'<button class="btn wide" data-gexp>Dodaj do Google Kontaktów</button>'}
    <button class="btn dan wide" data-del>Usuń osobę</button>`);
   if(o.foto)(async()=>{let b=await idb.get('f:'+o.foto);if(!b)try{b='data:image/jpeg;base64,'+(await api('foto',{id:o.foto})).b64;idb.set('f:'+o.foto,b)}catch(e){}const p=d.querySelector('#pf');if(b&&p)p.src=b})();
   d.querySelector('[data-x]').onclick=closeSheet;
@@ -276,7 +276,8 @@ function otworzOsobe(id){
   const fm=d.querySelector('[data-fam]');if(fm)fm.onclick=()=>otworzRodzine(id);
   d.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>wybierzPowiazanie(id,b.dataset.add));
   d.querySelectorAll('[data-rdel]').forEach(b=>b.onclick=async()=>{if(!confirm('Usunąć to powiązanie?'))return;busy(true);try{await api('relacjaUsun',{id:b.dataset.rdel});S.relacje=S.relacje.filter(r=>r.id!==b.dataset.rdel);zapiszCache();busy(false);przeladujOsobe(id)}catch(e){busy(false);toast(e.message)}});
-  const ge=d.querySelector('[data-gexp]');if(ge)ge.onclick=async()=>{busy(true,'Dodaję do Google…');try{const j=await api('googleEksport',{id});o.google=j.google;zapiszCache();busy(false);toast('Dodano do Google Kontaktów');przeladujOsobe(id)}catch(e){busy(false);toast(e.message)}};
+  const ge=d.querySelector('[data-gexp]');if(ge)ge.onclick=async()=>{busy(true,'Dodaję do Google…');try{const j=await api('googleEksport',{id});o.google=j.google;zapiszCache();busy(false);toast(j.uwaga||'Dodano do Google Kontaktów ze zdjęciem');przeladujOsobe(id)}catch(e){busy(false);toast(e.message)}};
+  const gf=d.querySelector('[data-gfoto]');if(gf)gf.onclick=async()=>{if(!confirm('Zastąpić zdjęcie w aplikacji zdjęciem z Google Kontaktów?'))return;busy(true,'Pobieram zdjęcie…');try{const j=await api('googleFotoPobierz',{id});Object.assign(o,j.osoba);zapiszCache();busy(false);toast('Zdjęcie pobrane z Google');przeladujOsobe(id)}catch(e){busy(false);toast(e.message)}};
   d.querySelector('[data-del]').onclick=async()=>{if(!confirm('Usunąć '+nazwa(o)+' wraz ze zdjęciem i powiązaniami?'))return;busy(true);try{await api('usun',{id});S.osoby=S.osoby.filter(x=>x.id!==id);S.relacje=S.relacje.filter(r=>r.a!==id&&r.b!==id);zapiszCache();busy(false);closeSheet();render()}catch(e){busy(false);toast(e.message)}};
 }
 function przeladujOsobe(id){closeSheet();setTimeout(()=>otworzOsobe(id),200);render()}
@@ -383,7 +384,7 @@ function formularz(o,poZapisie){
     try{const j=await api('zapisz',payload);const i=S.osoby.findIndex(x=>x.id===j.osoba.id);if(i>=0)S.osoby[i]=j.osoba;else S.osoby.push(j.osoba);
       if(foto)idb.set('f:'+j.osoba.foto,foto);
       if(pend.length){busy(true,'Łączę z rodziną…');const n=await dodajRelacje(pend.map(p=>relDef(p.rel,j.osoba.id,p.id)));if(n)toast('Uzupełniono też powiązań: '+n)}
-      zapiszCache();busy(false);toast('Zapisano');render();
+      zapiszCache();busy(false);toast(j.uwaga||(payload.eksport?'Zapisano i dodano do Google Kontaktów':'Zapisano'));render();
       if(poZapisie)poZapisie(j.osoba);else{closeSheet();if(!nowa)setTimeout(()=>przeladujOsobe(j.osoba.id),220)}}
     catch(e){busy(false);toast('Błąd zapisu: '+e.message)}};
 }
