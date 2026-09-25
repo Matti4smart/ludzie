@@ -214,11 +214,13 @@ function vUst(){
   <button class="btn pri wide" id="u-save">Zapisz i połącz</button>
   <h2>Google Kontakty</h2><p style="color:var(--muted);margin:0">Wybierz kontakty do przeniesienia. Imię, telefon, urodziny i zdjęcie przejdą automatycznie.</p>
   <button class="btn wide" id="u-imp">Importuj z Google Kontaktów</button>
+  <button class="btn wide" id="u-gfoto">Pobierz brakujące zdjęcia z Google</button>
   <h2>Dane</h2><p style="color:var(--muted);margin:0">Osób: ${S.osoby.length}, powiązań: ${S.relacje.length}.</p>
   <button class="btn wide" id="u-ref">Odśwież z serwera</button>
   <button class="btn wide" id="u-fix">Uzupełnij powiązania rodzinne</button><p style="color:var(--muted);font-size:14px">Dopisuje brakujące powiązania, np. dzieci Marcina także jego partnerce.</p></main>`;
   $('#u-save').onclick=async()=>{cfg={url:$('#u-url').value.trim(),token:$('#u-tok').value.trim()};localStorage.setItem('cfg',JSON.stringify(cfg));busy(true,'Łączę…');try{await api('lista');busy(false);toast('Połączono');S.view='ludzie';odswiez()}catch(e){busy(false);toast('Błąd: '+e.message)}};
-  $('#u-imp').onclick=importGoogle; $('#u-fix').onclick=async()=>{busy(true,'Uzupełniam…');try{const n=await dodajRelacje(S.relacje.flatMap(uzupelnienia).map(x=>({...x,auto:true})));busy(false);toast(n?'Dodano powiązań: '+n:'Wszystko było kompletne')}catch(e){busy(false);toast(e.message)}};
+  $('#u-imp').onclick=importGoogle;
+  $('#u-gfoto').onclick=async()=>{busy(true,'Pobieram zdjęcia…');try{const j=await api('googleFotoBrakujace');j.osoby.forEach(o=>{const i=S.osoby.findIndex(x=>x.id===o.id);if(i>=0)S.osoby[i]=o});zapiszCache();busy(false);toast(`Uzupełniono zdjęć: ${j.osoby.length} z ${j.sprawdzono}`+(j.blad?` (błąd: ${j.blad})`:''));render()}catch(e){busy(false);toast(e.message)}}; $('#u-fix').onclick=async()=>{busy(true,'Uzupełniam…');try{const n=await dodajRelacje(S.relacje.flatMap(uzupelnienia).map(x=>({...x,auto:true})));busy(false);toast(n?'Dodano powiązań: '+n:'Wszystko było kompletne')}catch(e){busy(false);toast(e.message)}};
   $('#u-ref').onclick=async()=>{busy(true);await odswiez();busy(false);toast('Odświeżono')};
 }
 
@@ -351,7 +353,7 @@ function formularz(o,poZapisie){
    <label>Zdjęcie twarzy</label><div class="photo-pick"><img class="prev" data-prev ${o.miniatura?`src="${o.miniatura}"`:'style="visibility:hidden"'} alt=""><div class="btns">
      <button class="btn" data-cam>📷 Aparat</button><button class="btn" data-gal>🖼 Galeria</button></div></div>
    <input type="file" accept="image/*" capture="environment" hidden data-fcam><input type="file" accept="image/*" hidden data-fgal>
-   ${picker?'<button class="btn wide" data-pick>📇 Pobierz imię i numer z kontaktów telefonu</button>':''}
+   ${picker?'<button class="btn wide" data-pick>📇 Pobierz z kontaktów telefonu</button>':''}
    <div class="two"><div><label>Imię</label><input class="in" name="imie" value="${h(o.imie)}" autocomplete="off"></div><div><label>Nazwisko</label><input class="in" name="nazwisko" value="${h(o.nazwisko)}" autocomplete="off"></div></div>
    <label>Telefon</label><input class="in" name="telefon" type="tel" value="${h(o.telefon)}">
    <label>Gdzie poznany</label><input class="in" name="gdzie" value="${h(o.gdzie)}" placeholder="np. wywiadówka 3B, siłownia">
@@ -369,7 +371,8 @@ function formularz(o,poZapisie){
   d.querySelector('[data-gal]').onclick=()=>d.querySelector('[data-fgal]').click();
   const wybrano=e=>{const file=e.target.files[0];e.target.value='';if(!file)return;const r=new FileReader();r.onload=()=>kadruj(r.result,(full,m)=>{foto=full;mini=m;const p=d.querySelector('[data-prev]');p.src=m;p.style.visibility=''});r.readAsDataURL(file)};
   d.querySelector('[data-fcam]').onchange=wybrano;d.querySelector('[data-fgal]').onchange=wybrano;
-  const pk=d.querySelector('[data-pick]');if(pk)pk.onclick=async()=>{try{const[c]=await navigator.contacts.select(['name','tel'],{multiple:false});if(!c)return;const n=(c.name&&c.name[0]||'').trim().split(/\s+/);f('imie').value=n.shift()||'';f('nazwisko').value=n.join(' ');if(c.tel&&c.tel[0])f('telefon').value=c.tel[0]}catch(e){}};
+  const pk=d.querySelector('[data-pick]');if(pk)pk.onclick=async()=>{try{const dost=await navigator.contacts.getProperties();const[c]=await navigator.contacts.select(['name','tel',...(dost.includes('icon')?['icon']:[])],{multiple:false});if(!c)return;
+    if(c.icon&&c.icon[0]){const r=new FileReader();r.onload=()=>kadruj(r.result,(full,m)=>{foto=full;mini=m;const p=d.querySelector('[data-prev]');p.src=m;p.style.visibility=''});r.readAsDataURL(c.icon[0])}const n=(c.name&&c.name[0]||'').trim().split(/\s+/);f('imie').value=n.shift()||'';f('nazwisko').value=n.join(' ');if(c.tel&&c.tel[0])f('telefon').value=c.tel[0]}catch(e){}};
   const rysujPend=()=>{const el=d.querySelector('[data-rels]');if(!el)return;el.innerHTML=pend.map((p,i)=>`<div class="row">${img(byId(p.id))}<div class="grow">${h(nazwa(byId(p.id)))}<br><small style="color:var(--muted)">${RELN[p.rel]}</small></div><button class="x" data-pdel="${i}">×</button></div>`).join('');
     el.querySelectorAll('[data-pdel]').forEach(b=>b.onclick=()=>{pend.splice(+b.dataset.pdel,1);rysujPend()})};
   const ra=d.querySelector('[data-radd]');if(ra)ra.onclick=()=>wybierzTyp(rel=>wybierzOsobe(RELN[rel],[o.id,...pend.map(p=>p.id)].filter(Boolean),inny=>{pend.push({rel,id:inny});closeSheet();rysujPend()}));
@@ -409,7 +412,7 @@ async function importGoogle(){
   busy(true,'Pobieram listę kontaktów…');let k;
   try{k=(await api('googleLista')).kontakty}catch(e){busy(false);toast(e.message);return}busy(false);
   const sel=new Set();
-  const d=openSheet(`<div class="bar"><button class="btn" data-x>← Wróć</button><button class="btn pri" data-go>Importuj (0)</button></div>
+  let bf=0,bl='';const d=openSheet(`<div class="bar"><button class="btn" data-x>← Wróć</button><button class="btn pri" data-go>Importuj (0)</button></div>
    <h1 class="p-name" style="text-align:left;font-size:26px">Google Kontakty</h1><input class="search" style="margin-top:12px" placeholder="Szukaj…" data-q><div data-list></div>`);
   const lista=()=>{const q=norm(d.querySelector('[data-q]').value);d.querySelector('[data-list]').innerHTML=k.filter(c=>!q||norm(c.nazwa+' '+c.tel).includes(q)).slice(0,300)
     .map(c=>`<label class="row check ${c.juz?'pick-row dis':''}" style="margin:0"><input type="checkbox" data-rn="${h(c.rn)}" ${sel.has(c.rn)?'checked':''} ${c.juz?'disabled':''}><div class="grow">${h(c.nazwa)}<br><small style="color:var(--muted)">${h(c.tel)}${c.maFoto?' 📷':''}${c.juz?' (już w bazie)':''}</small></div></label>`).join('');
@@ -417,8 +420,8 @@ async function importGoogle(){
   d.querySelector('[data-q]').oninput=lista;lista();
   d.querySelector('[data-x]').onclick=closeSheet;
   d.querySelector('[data-go]').onclick=async()=>{const rns=[...sel];if(!rns.length)return;let n=0;
-    try{for(let i=0;i<rns.length;i+=25){busy(true,`Importuję ${i+1}–${Math.min(i+25,rns.length)} z ${rns.length}…`);const j=await api('googleImport',{rns:rns.slice(i,i+25)});S.osoby.push(...j.osoby);n+=j.osoby.length}
-      zapiszCache();busy(false);toast('Zaimportowano: '+n);closeSheet();S.view='ludzie';render()}catch(e){busy(false);zapiszCache();toast('Przerwano po '+n+': '+e.message)}};
+    try{for(let i=0;i<rns.length;i+=25){busy(true,`Importuję ${i+1}–${Math.min(i+25,rns.length)} z ${rns.length}…`);const j=await api('googleImport',{rns:rns.slice(i,i+25)});S.osoby.push(...j.osoby);n+=j.osoby.length;if(j.bezFoto)bf+=j.bezFoto,bl=j.blad}
+      zapiszCache();busy(false);toast('Zaimportowano: '+n+(bf?`. Bez zdjęcia: ${bf} (${bl})`:''));closeSheet();S.view='ludzie';render()}catch(e){busy(false);zapiszCache();toast('Przerwano po '+n+': '+e.message)}};
 }
 
 /* ========= start ========= */
