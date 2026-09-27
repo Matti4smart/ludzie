@@ -101,6 +101,23 @@ textarea.in{min-height:80px;resize:vertical}
 .pick-row.dis{opacity:.45}
 .para{display:flex;align-items:center;gap:2px;background:var(--bg);border-radius:16px;padding:6px 6px 4px}.heart{color:var(--warm);font-size:14px;margin-top:-18px}
 .stack{display:flex;flex:none}.stack img,.stack .ph{width:40px;height:40px;border-radius:30%;object-fit:cover;background:var(--line);margin-left:-12px;border:2px solid var(--surface);display:grid;place-items:center;font:600 15px var(--serif);color:var(--muted)}.stack>:first-child{margin-left:0}
+.gpick{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}.gadd{display:flex;gap:8px;margin-top:8px}.gadd .in{flex:1}
+.os{position:relative;padding-left:4px}.os::before{content:"";position:absolute;left:58px;top:6px;bottom:6px;border-left:2px solid var(--line)}
+.os-dek{font:600 15px var(--serif);color:var(--accent);margin:12px 0 4px 72px}
+.os-w{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;padding:6px 0;text-align:left;position:relative}
+.os-r{width:44px;font-weight:700;font-size:14px;color:var(--muted);text-align:right;flex:none}.os-k{width:12px;height:12px;border-radius:50%;background:var(--accent);flex:none;margin:0 4px;z-index:1;border:2px solid var(--bg)}
+.os-w img,.os-w .ph{width:46px;height:46px;border-radius:30%;object-fit:cover;flex:none;background:var(--line);display:grid;place-items:center;font:600 18px var(--serif);color:var(--muted)}
+.os-w small{color:var(--muted)}.os-w.me b{color:var(--accent)}
+.kolaz{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px;padding:10px 0}
+.kp{background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:5px 5px 7px;transform:rotate(var(--r));box-shadow:0 3px 10px rgba(60,40,20,.12);font:500 13px var(--serif);color:var(--ink)}
+.kp img,.kp .ph{display:grid;place-items:center;object-fit:cover;background:var(--line);border-radius:2px;margin-bottom:4px;font:600 26px var(--serif);color:var(--muted)}
+.kp b{display:block;font-weight:500;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kp-xl img,.kp-xl .ph{width:150px;height:150px}.kp-l img,.kp-l .ph{width:104px;height:104px}.kp-m img,.kp-m .ph{width:76px;height:76px}.kp-s img,.kp-s .ph{width:58px;height:58px}
+.kp-xl{z-index:2}.kp-xl b{font-size:16px}
+.kim{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--surface);border-radius:16px;padding:14px}
+.kim-p{text-align:center;width:78px;flex:none}.kim-p img,.kim-p .ph{width:70px;height:70px;border-radius:30%;object-fit:cover;background:var(--line);display:grid;place-items:center;margin:0 auto 4px;font:600 24px var(--serif);color:var(--muted)}
+.kim-v{text-align:center;color:var(--muted);font-size:13px}.kim-v strong{display:block;font:600 24px/1.2 var(--serif);color:var(--accent);margin-top:4px}
+.kim-droga{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:14px}.kim-s{color:var(--muted)}.kim-n{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 10px}
 .today{background:var(--surface);border-radius:14px;padding:10px 14px;margin:6px 0 14px;border-left:4px solid var(--warm)}
 </style>
 </head>
@@ -126,7 +143,7 @@ const byId=id=>S.osoby.find(o=>o.id===id);
 const nazwa=o=>o?(o.imie+' '+o.nazwisko).trim():'?';
 const ini=o=>h((o.imie||'?')[0]);
 const img=(o,cls='ph')=>o&&o.miniatura?`<img class="${cls}" src="${o.miniatura}" alt="">`:`<div class="ph">${o?ini(o):'+'}</div>`;
-const grupyOf=o=>String(o.grupy||'').split(',').map(s=>s.trim()).filter(Boolean);
+const grupyOf=o=>[...new Set(String(o.grupy||'').split(/[,;\n]+/).map(s=>s.trim()).filter(Boolean))];
 function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}
 function busy(on,t='Chwila…'){let b=$('.busy');if(on&&!b){b=document.createElement('div');b.className='busy';document.body.appendChild(b)}if(b){if(on)b.textContent=t;else b.remove()}}
 
@@ -145,10 +162,10 @@ async function api(action,data={}){
 async function odswiez(){try{const j=await api('lista');S.osoby=j.osoby;S.relacje=j.relacje;zapiszCache();render()}catch(e){toast('Tryb offline: '+e.message)}}
 
 /* ========= daty ========= */
-function parseDM(s){const m=String(s||'').trim().match(/^(\d{1,2})[.\-/](\d{1,2})(?:[.\-/](\d{4}))?$/);return m?{d:+m[1],m:+m[2],y:m[3]?+m[3]:null}:null}
+function parseDM(s){const t=String(s||'').trim();if(/^\d{4}$/.test(t))return{d:null,m:null,y:+t};const m=String(s||'').trim().match(/^(\d{1,2})[.\-/](\d{1,2})(?:[.\-/](\d{4}))?$/);return m?{d:+m[1],m:+m[2],y:m[3]?+m[3]:null}:null}
 function dniDo(dm){const t=new Date();t.setHours(0,0,0,0);let n=new Date(t.getFullYear(),dm.m-1,dm.d);if(n<t)n=new Date(t.getFullYear()+1,dm.m-1,dm.d);return Math.round((n-t)/864e5)}
 const kiedyTxt=d=>d===0?'dziś':d===1?'jutro':'za '+d+' dni';
-function nadchodzace(limit=60){const out=[];S.osoby.forEach(o=>{[['urodziny','Urodziny'],['imieniny','Imieniny']].forEach(([k,l])=>{const dm=parseDM(o[k]);if(!dm)return;const d=dniDo(dm);if(d<=limit){let extra='';if(k==='urodziny'&&dm.y)extra=` (kończy ${new Date(Date.now()+d*864e5).getFullYear()-dm.y})`;out.push({o,l,d,extra})}})});return out.sort((a,b)=>a.d-b.d)}
+function nadchodzace(limit=60){const out=[];S.osoby.forEach(o=>{[['urodziny','Urodziny'],['imieniny','Imieniny']].forEach(([k,l])=>{const dm=parseDM(o[k]);if(!dm||!dm.d)return;const d=dniDo(dm);if(d<=limit){let extra='';if(k==='urodziny'&&dm.y)extra=` (kończy ${new Date(Date.now()+d*864e5).getFullYear()-dm.y})`;out.push({o,l,d,extra})}})});return out.sort((a,b)=>a.d-b.d)}
 
 /* ========= nawigacja arkuszy + przycisk Wstecz Androida ========= */
 const stack=[];
@@ -183,7 +200,7 @@ function vLudzie(){
     <div class="sec"><h3>Wszyscy</h3><div class="chips" style="padding:0"><button class="chip ${S.sort==='az'?'on':''}" data-sort="az">A–Z</button><button class="chip ${S.sort==='new'?'on':''}" data-sort="new">Najnowsi</button></div></div>
     <div class="grid">${S.osoby.slice().sort(srt).map(faceHtml).join('')}</div>`}
   $('#app').innerHTML=`<div class="top"><div class="hd"><h1>Ludzie</h1><span>osób: ${S.osoby.length}</span></div>
-    <input id="q" class="search" type="search" placeholder="Szukaj: imię, miejsce, skojarzenie…" value="${h(S.q)}"></div><main>${body}</main>`;
+    <input id="q" class="search" type="search" placeholder="Szukaj: imię, grupa, skojarzenie…" value="${h(S.q)}"></div><main>${body}</main>`;
   const qi=$('#q');qi.oninput=e=>{S.q=e.target.value;const pos=e.target.selectionStart;vLudzie();const n=$('#q');n.focus();n.setSelectionRange(pos,pos)};
   if(focused){qi.focus();qi.setSelectionRange(qi.value.length,qi.value.length)}
   document.querySelectorAll('[data-sort]').forEach(b=>b.onclick=()=>{S.sort=b.dataset.sort;vLudzie()});
@@ -197,8 +214,15 @@ function vGrupy(){
 }
 function otworzGrupe(g){
   const l=S.osoby.filter(o=>grupyOf(o).includes(g)).sort((a,b)=>nazwa(a).localeCompare(nazwa(b),'pl'));
-  const d=openSheet(`<div class="bar"><button class="btn" data-x>← Wróć</button></div><h1 class="p-name">${h(g)}</h1><p class="p-sub">osób: ${l.length}</p><div class="grid">${l.map(faceHtml).join('')}</div>`);
+  const d=openSheet(`<div class="bar"><button class="btn" data-x>← Wróć</button><button class="btn pri" data-gadd>+ Dodaj</button></div><h1 class="p-name">${h(g)}</h1><p class="p-sub">osób: ${l.length}</p><div class="grid">${l.map(faceHtml).join('')}</div>`);
   d.querySelector('[data-x]').onclick=closeSheet;podepnij(d);
+  const odnow=()=>{closeSheet();setTimeout(()=>otworzGrupe(g),220);render()};
+  d.querySelector('[data-gadd]').onclick=()=>{const w=openSheet(`<div class="bar"><button class="btn" data-x>← Wróć</button></div><h1 class="p-name" style="text-align:left;font-size:26px">Dodaj do: ${h(g)}</h1>
+     <button class="btn pri wide" data-n>+ Nowa osoba</button><button class="btn wide" data-e>Wybierz z istniejących</button>`);
+    w.querySelector('[data-x]').onclick=closeSheet;
+    w.querySelector('[data-n]').onclick=()=>formularz(null,null,{grupy:g,po:()=>{closeSheet();setTimeout(odnow,220)}});
+    w.querySelector('[data-e]').onclick=()=>wybierzOsobe('Dodaj do: '+h(g),l.map(o=>o.id),async id=>{const o=byId(id);busy(true);
+      try{const j=await api('zapisz',{osoba:{...o,grupy:[...grupyOf(o),g].join(', ')}});Object.assign(o,j.osoba);zapiszCache();busy(false);toast(nazwa(o)+' dodany do grupy');history.go(-2);setTimeout(()=>otworzGrupe(g),260);render()}catch(e){busy(false);toast(e.message)}})};
 }
 function vDaty(){
   const l=nadchodzace(60);
@@ -254,17 +278,16 @@ function otworzOsobe(id){
   const o=byId(id);if(!o)return;
   const tel=String(o.telefon||'').replace(/[^\d+]/g,'');
   const ur=parseDM(o.urodziny),im=parseDM(o.imieniny);
-  const wiek=ur&&ur.y?(()=>{const dd=dniDo(ur);return ` (${new Date(Date.now()+dd*864e5).getFullYear()-ur.y-(dd?1:0)} l.)`})():'';
+  const wiek=ur&&ur.y&&!ur.d?` (ok. ${new Date().getFullYear()-ur.y} l.)`:ur&&ur.y?(()=>{const dd=dniDo(ur);return ` (${new Date(Date.now()+dd*864e5).getFullYear()-ur.y-(dd?1:0)} l.)`})():'';
   const rels=S.relacje.filter(r=>r.a===id||r.b===id);
   const d=openSheet(`<div class="bar"><button class="btn" data-x>← Wróć</button><button class="btn" data-edit>Edytuj</button></div>
    ${o.miniatura?`<img class="p-photo" id="pf" src="${o.miniatura}" alt="">`:`<div class="p-photo" style="display:grid;place-items:center;font:600 80px var(--serif);color:var(--muted)">${ini(o)}</div>`}
    <h1 class="p-name">${h(nazwa(o))}</h1>
-   <p class="p-sub">${o.gdzie||o.kiedy?'Poznany: '+h([o.gdzie,o.kiedy].filter(Boolean).join(', ')):'&nbsp;'}</p>
+   <p class="p-sub">${grupyOf(o).map(h).join(' · ')||'&nbsp;'}</p>
    ${tel?`<div class="acts"><a href="tel:${tel}">Zadzwoń</a><a class="sec" href="sms:${tel}">SMS</a></div>`:''}
    ${o.skojarzenie?`<p class="hint">${h(o.skojarzenie)}</p>`:''}
    <dl>${tel?`<div><dt>Telefon</dt><dd>${h(o.telefon)}</dd></div>`:''}
-   ${ur?`<div><dt>Urodziny</dt><dd>${h(o.urodziny)}${wiek}, ${kiedyTxt(dniDo(ur))}</dd></div>`:''}
-   ${im?`<div><dt>Imieniny</dt><dd>${h(o.imieniny)}, ${kiedyTxt(dniDo(im))}</dd></div>`:''}
+   ${ur?`<div><dt>Urodziny</dt><dd>${h(o.urodziny)}${wiek}${ur.d?', '+kiedyTxt(dniDo(ur)):''}</dd></div>`:''}
    ${grupyOf(o).length?`<div><dt>Grupy</dt><dd>${grupyOf(o).map(h).join(', ')}</dd></div>`:''}
    ${o.notatki?`<div style="display:block"><dt>Notatki</dt><dd style="text-align:left;white-space:pre-wrap;margin-top:4px">${h(o.notatki)}</dd></div>`:''}</dl>
    <h2>Rodzina</h2>${drzewo(id)}${S.relacje.some(r=>r.a===id||r.b===id)?'<button class="btn wide" data-fam>👪 Pokaż całą rodzinę</button>':''}
@@ -329,12 +352,60 @@ function uloz(row){const used=new Set(),out=[];const key=x=>rodzice(x).slice().s
   row.slice().sort((a,b)=>key(a).localeCompare(key(b))||nazwa(byId(a)).localeCompare(nazwa(byId(b)),'pl')).forEach(x=>{if(used.has(x))return;used.add(x);const pp=partnerzy(x).filter(p=>row.includes(p)&&!used.has(p));pp.forEach(p=>used.add(p));out.push([x,...pp])});return out}
 function rodziny(){const done=new Set(),out=[];S.osoby.forEach(o=>{if(done.has(o.id))return;const ids=skladowa(o.id);ids.forEach(i=>done.add(i));if(ids.length>1)out.push(ids)});return out}
 function nazwaRodziny(ids){const c={};ids.forEach(i=>{const n=byId(i).nazwisko;if(n)c[n]=(c[n]||0)+1});const t=Object.entries(c).sort((a,b)=>b[1]-a[1])[0];return 'Rodzina '+(t?t[0]:byId(ids[0]).imie)}
-function otworzRodzine(id){
-  const ids=skladowa(id),rows=pokolenia(ids);
+/* ========= rodzina: drzewo, oś czasu, kolaż, "kim jest dla mnie" ========= */
+const kob=o=>{const n=norm((o&&o.imie||'').split(' ')[0]);return /a$/.test(n)&&!['kuba','barnaba','kosma','bonawentura','jarema'].includes(n)};
+const rokUr=o=>{const dm=parseDM(o&&o.urodziny);return dm&&dm.y?dm.y:null};
+function sasiedzi(x){const out=[];S.relacje.forEach(r=>{
+  if(r.typ==='rodzic'){if(r.b===x)out.push([r.a,'P']);else if(r.a===x)out.push([r.b,'C'])}
+  else if(r.a===x||r.b===x)out.push([r.a===x?r.b:r.a,r.typ==='malzonek'?'S':'R'])});return out.filter(([y])=>byId(y))}
+function sciezka(a,b){const prev={[a]:null},q=[a];while(q.length){const x=q.shift();if(x===b)break;for(const[y,t]of sasiedzi(x))if(!(y in prev)){prev[y]=[x,t];q.push(y)}}
+  if(!(b in prev))return null;const kroki=[];let c=b;while(prev[c]){kroki.unshift({id:c,t:prev[c][1]});c=prev[c][0]}return kroki}
+const KROK={P:['ojciec','matka'],C:['syn','córka'],S:['mąż','żona'],R:['brat','siostra']};
+const NAZWY={P:['ojciec','matka'],C:['syn','córka'],S:['mąż','żona'],PC:['brat','siostra'],PP:['dziadek','babcia'],CC:['wnuk','wnuczka'],
+  PPP:['pradziadek','prababcia'],CCC:['prawnuk','prawnuczka'],PPC:['wujek','ciocia'],PPCC:['kuzyn','kuzynka'],SP:['teść','teściowa'],CS:['zięć','synowa'],
+  SPC:['szwagier','szwagierka'],PCS:['szwagier','szwagierka'],SPCS:['szwagier','szwagierka'],PS:['ojczym','macocha'],SC:['pasierb','pasierbica'],
+  CSP:['swat','swatka'],PPCS:['wujek (przez małżeństwo)','ciocia (przez małżeństwo)'],SPP:['dziadek współmałżonka','babcia współmałżonka'],
+  CCS:['mąż wnuczki','żona wnuka'],PPPC:['brat dziadków','siostra dziadków'],SPPC:['wujek współmałżonka','ciocia współmałżonka']};
+function kimJest(a,b){if(a===b)return{nazwa:'to ta sama osoba',kroki:[]};const k=sciezka(a,b);if(!k)return null;
+  const wz=k.map(x=>x.t==='R'?'PC':x.t).join('');const f=kob(byId(b))?1:0;let nazwa=NAZWY[wz]&&NAZWY[wz][f];
+  if(wz==='PCC'){const rodz=byId(k[0].id);nazwa=kob(rodz)?(f?'siostrzenica':'siostrzeniec'):(f?'bratanica':'bratanek')}
+  if(k.length===1&&k[0].t==='R')nazwa=f?'siostra':'brat';
+  return{nazwa,kroki:k}}
+function kimHtml(a,b){const r=kimJest(a,b);if(!r)return'<p class="empty">Te osoby nie są połączone powiązaniami rodzinnymi.</p>';
+  const A=byId(a),B=byId(b);
+  return `<div class="kim"><div class="kim-p">${img(A)}<b>${h(A.imie)}</b></div><div class="kim-v">${h(B.imie)} to dla ${h(A.imie)}<br><strong>${h(r.nazwa||'dalszy krewny')}</strong></div><div class="kim-p">${img(B)}<b>${h(B.imie)}</b></div></div>
+   ${r.kroki.length>1||!r.nazwa?`<p class="gen-l" style="margin:10px 0 6px">Droga w rodzinie</p><div class="kim-droga"><span>${h(A.imie)}</span>${r.kroki.map(k=>`<span class="kim-s">→ ${KROK[k.t][kob(byId(k.id))?1:0]}</span><button class="kim-n" data-go="${k.id}">${h(byId(k.id).imie)}</button>`).join('')}</div>`:''}`}
+function osCzasu(ids,me){const z=ids.map(byId).filter(o=>rokUr(o)).sort((x,y)=>rokUr(x)-rokUr(y)),bez=ids.map(byId).filter(o=>!rokUr(o)),t=new Date().getFullYear();
+  if(!z.length)return '<p class="empty">Nikt w tej rodzinie nie ma wpisanego roku urodzenia. Dodaj go w karcie osoby (wystarczy sam rok).</p>';
+  const min=rokUr(z[0]),max=rokUr(z[z.length-1]);let dek=0;
+  return `<p class="p-sub" style="margin-top:0">Rozpiętość: ${max-min} lat (${min}–${max})</p><div class="os">${z.map(o=>{const y=rokUr(o),dd=Math.floor(y/10)*10,naglowek=dd!==dek?(dek=dd,`<div class="os-dek">${dd}s</div>`):'';
+    return `${naglowek}<button class="os-w ${o.id===me?'me':''}" data-go="${o.id}"><span class="os-r">${y}</span><span class="os-k"></span>${img(o)}<span class="grow"><b>${h(nazwa(o))}</b><br><small>${t-y} l.${rodzice(o.id).length?' · dziecko: '+rodzice(o.id).map(p=>h(byId(p).imie)).join(' i '):''}</small></span></button>`}).join('')}</div>
+   ${bez.length?`<p class="gen-l" style="margin:14px 0 6px">Bez roku urodzenia</p><div class="stack" style="flex-wrap:wrap">${bez.map(o=>`<button class="node" data-go="${o.id}">${img(o)}${h(o.imie)}</button>`).join('')}</div>`:''}`}
+function kolaz(ids,me){const dist={[me]:0},q=[me];while(q.length){const x=q.shift();sasiedzi(x).forEach(([y])=>{if(!(y in dist)){dist[y]=dist[x]+1;q.push(y)}})}
+  const bliskosc=x=>(partnerzy(me).includes(x)?0:dist[x]??9);
+  const l=ids.slice().sort((a,b)=>bliskosc(a)-bliskosc(b)||(rokUr(byId(a))||3000)-(rokUr(byId(b))||3000));
+  const rozm=x=>{const d=bliskosc(x);return d===0?'xl':d===1?'l':d===2?'m':'s'};
+  return `<div class="kolaz">${l.map((x,i)=>{const o=byId(x);return `<button class="kp kp-${rozm(x)}" style="--r:${((i*37)%9-4)*.7}deg" data-go="${x}">${o.miniatura?`<img src="${o.miniatura}" alt="">`:`<div class="ph">${ini(o)}</div>`}<b>${h(o.imie)}</b></button>`}).join('')}</div>
+   <p class="p-sub">Im bliżej ${h(byId(me).imie)}, tym większe zdjęcie.</p>`}
+function otworzRodzine(id,widok){
+  const ids=skladowa(id),rows=pokolenia(ids);widok=widok||'drzewo';let drugi=null;
+  const zak=[['drzewo','🌳 Drzewo'],['os','📅 Oś czasu'],['kolaz','🖼 Kolaż'],['kim','❓ Kim jest?']];
   const d=openSheet(`<div class="bar"><button class="btn" data-x>← Wróć</button></div><h1 class="p-name">${h(nazwaRodziny(ids))}</h1><p class="p-sub">osób: ${ids.length}, pokoleń: ${rows.length}</p>
-   <div class="tree">${rows.map((row,i)=>`<div class="gen"><div class="gen-l">Pokolenie ${i+1}</div>${uloz(row).map(p=>`<div class="para">${p.map(x=>node(x,x===id?'me':'')).join('<span class="heart">♥</span>')}</div>`).join('')}</div>`).join('')}</div>`);
-  d.querySelector('[data-x]').onclick=closeSheet;
-  d.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>otworzOsobe(b.dataset.go));
+   <div class="chips" style="justify-content:center;flex-wrap:wrap">${zak.map(([k,v])=>`<button class="chip" data-w="${k}">${v}</button>`).join('')}</div><div data-body style="margin-top:12px"></div>`);
+  const body=d.querySelector('[data-body]');
+  const rysuj=()=>{d.querySelectorAll('[data-w]').forEach(b=>b.classList.toggle('on',b.dataset.w===widok));
+    if(widok==='drzewo')body.innerHTML=`<div class="tree">${rows.map((row,i)=>`<div class="gen"><div class="gen-l">Pokolenie ${i+1}</div>${uloz(row).map(p=>`<div class="para">${p.map(x=>node(x,x===id?'me':'')).join('<span class="heart">♥</span>')}</div>`).join('')}</div>`).join('')}</div>`;
+    else if(widok==='os')body.innerHTML=osCzasu(ids,id);
+    else if(widok==='kolaz')body.innerHTML=kolaz(ids,id);
+    else{const opt=(sel)=>ids.slice().sort((a,b)=>nazwa(byId(a)).localeCompare(nazwa(byId(b)),'pl')).map(x=>`<option value="${x}" ${x===sel?'selected':''}>${h(nazwa(byId(x)))}</option>`).join('');
+      drugi=drugi||ids.find(x=>x!==id);
+      body.innerHTML=`<div class="two"><div><label>Osoba</label><select class="in" data-a>${opt(id)}</select></div><div><label>Kim jest…</label><select class="in" data-b>${opt(drugi)}</select></div></div><div data-kim style="margin-top:14px">${kimHtml(id,drugi)}</div>`;
+      const upd=()=>{d.querySelector('[data-kim]').innerHTML=kimHtml(d.querySelector('[data-a]').value,d.querySelector('[data-b]').value);podp()};
+      d.querySelector('[data-a]').onchange=upd;d.querySelector('[data-b]').onchange=e=>{drugi=e.target.value;upd()}}
+    podp()};
+  const podp=()=>body.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>otworzOsobe(b.dataset.go));
+  d.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>{widok=b.dataset.w;rysuj()});
+  d.querySelector('[data-x]').onclick=closeSheet;rysuj();
 }
 function vRodziny(){
   const l=rodziny().sort((a,b)=>b.length-a.length);
@@ -344,8 +415,8 @@ function vRodziny(){
 }
 
 /* ========= formularz osoby ========= */
-function formularz(o,poZapisie){
-  const nowa=!o;o=o||{};let foto=null,mini=null;const pend=[];
+function formularz(o,poZapisie,preset){
+  const nowa=!o;o=o||{...(preset||{})};const wybrane=new Set(grupyOf(o));let foto=null,mini=null;const pend=[];
   const grupy=[...new Set(S.osoby.flatMap(grupyOf))];
   const picker='contacts' in navigator&&'ContactsManager' in window;
   const d=openSheet(`<div class="bar"><button class="btn" data-x>Anuluj</button><button class="btn pri" data-save>Zapisz</button></div>
@@ -356,16 +427,18 @@ function formularz(o,poZapisie){
    ${picker?'<button class="btn wide" data-pick>📇 Pobierz z kontaktów telefonu</button>':''}
    <div class="two"><div><label>Imię</label><input class="in" name="imie" value="${h(o.imie)}" autocomplete="off"></div><div><label>Nazwisko</label><input class="in" name="nazwisko" value="${h(o.nazwisko)}" autocomplete="off"></div></div>
    <label>Telefon</label><input class="in" name="telefon" type="tel" value="${h(o.telefon)}">
-   <label>Gdzie poznany</label><input class="in" name="gdzie" value="${h(o.gdzie)}" placeholder="np. wywiadówka 3B, siłownia">
-   <label>Kiedy poznany</label><input class="in" name="kiedy" value="${h(o.kiedy)}" placeholder="np. wrzesień 2026">
    <label>Skojarzenie <small>— coś, co pomoże przypomnieć sobie tę osobę</small></label><input class="in" name="skojarzenie" value="${h(o.skojarzenie)}" placeholder="np. wysoki, rude włosy, jeździ czerwonym Passatem">
-   <label>Grupy <small>— oddziel przecinkami</small></label><input class="in" name="grupy" list="gl" value="${h(o.grupy)}" placeholder="np. Klasa 3B, Rodzina"><datalist id="gl">${grupy.map(g=>`<option value="${h(g)}">`).join('')}</datalist>
-   <div class="two"><div><label>Urodziny <small>DD.MM.RRRR</small></label><input class="in" name="urodziny" inputmode="decimal" value="${h(o.urodziny)}" placeholder="12.05.1985"></div>
-   <div><label>Imieniny <small>DD.MM</small></label><input class="in" name="imieniny" inputmode="decimal" value="${h(o.imieniny)}" placeholder="30.11"></div></div>
+   <label>Grupy / tagi <small>— dotknij, aby zaznaczyć; można kilka</small></label><div class="gpick" data-gp></div><div class="gadd"><input class="in" data-gn placeholder="Nowa grupa, np. Eduhub"><button class="btn" data-gb>Dodaj</button></div>
+   <label>Urodziny <small>DD.MM.RRRR, DD.MM albo sam rok</small></label><input class="in" name="urodziny" inputmode="decimal" value="${h(o.urodziny)}" placeholder="12.05.1985 lub 1985">
    <label>Notatki</label><textarea class="in" name="notatki">${h(o.notatki)}</textarea>
    ${poZapisie?'':'<h2>Powiązania rodzinne</h2><div data-rels></div><button class="btn wide" data-radd>+ Dodaj powiązanie</button>'}
    ${o.google?'':'<label class="check"><input type="checkbox" data-gexp> Dodaj też do Google Kontaktów</label>'}`);
   const f=n=>d.querySelector(`[name="${n}"]`);
+  const rysujGr=()=>{const all=[...new Set([...grupy,...wybrane])].sort((a,b)=>a.localeCompare(b,'pl'));const el=d.querySelector('[data-gp]');
+    el.innerHTML=all.length?all.map(g=>`<button class="chip ${wybrane.has(g)?'on':''}" data-gc="${h(g)}">${wybrane.has(g)?'✓ ':''}${h(g)}</button>`).join(''):'<small style="color:var(--muted)">Brak grup — dodaj pierwszą poniżej.</small>';
+    el.querySelectorAll('[data-gc]').forEach(b=>b.onclick=()=>{const g=b.dataset.gc;wybrane.has(g)?wybrane.delete(g):wybrane.add(g);rysujGr()})};
+  const dodajGr=()=>{const i=d.querySelector('[data-gn]');i.value.split(/[,;]+/).map(x=>x.trim()).filter(Boolean).forEach(g=>wybrane.add(g));i.value='';rysujGr()};
+  d.querySelector('[data-gb]').onclick=dodajGr;d.querySelector('[data-gn]').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();dodajGr()}};rysujGr();
   d.querySelector('[data-x]').onclick=closeSheet;
   d.querySelector('[data-cam]').onclick=()=>d.querySelector('[data-fcam]').click();
   d.querySelector('[data-gal]').onclick=()=>d.querySelector('[data-fgal]').click();
@@ -377,10 +450,9 @@ function formularz(o,poZapisie){
     el.querySelectorAll('[data-pdel]').forEach(b=>b.onclick=()=>{pend.splice(+b.dataset.pdel,1);rysujPend()})};
   const ra=d.querySelector('[data-radd]');if(ra)ra.onclick=()=>wybierzTyp(rel=>wybierzOsobe(RELN[rel],[o.id,...pend.map(p=>p.id)].filter(Boolean),inny=>{pend.push({rel,id:inny});closeSheet();rysujPend()}));
   d.querySelector('[data-save]').onclick=async()=>{
-    const os={...o};['imie','nazwisko','telefon','gdzie','kiedy','skojarzenie','grupy','urodziny','imieniny','notatki'].forEach(k=>os[k]=f(k).value.trim());
-    os.grupy=grupyOf(os).join(', ');
+    const os={...o};['imie','nazwisko','telefon','skojarzenie','urodziny','notatki'].forEach(k=>os[k]=f(k).value.trim());os.grupy=[...wybrane].join(', ');
     if(!os.imie){toast('Wpisz imię');return}
-    for(const k of['urodziny','imieniny'])if(os[k]&&!parseDM(os[k])){toast('Zły format daty: '+k+' (użyj DD.MM lub DD.MM.RRRR)');return}
+    if(os.urodziny&&!parseDM(os.urodziny)){toast('Urodziny: wpisz DD.MM.RRRR, DD.MM albo sam rok RRRR');return}
     const payload={osoba:os,eksport:!!(d.querySelector('[data-gexp]')||{}).checked};
     if(foto){payload.fotoB64=foto.split(',')[1];payload.miniB64=mini}
     busy(true,'Zapisuję…');
@@ -388,11 +460,15 @@ function formularz(o,poZapisie){
       if(foto)idb.set('f:'+j.osoba.foto,foto);
       if(pend.length){busy(true,'Łączę z rodziną…');const n=await dodajRelacje(pend.map(p=>relDef(p.rel,j.osoba.id,p.id)));if(n)toast('Uzupełniono też powiązań: '+n)}
       zapiszCache();busy(false);toast(j.uwaga||(payload.eksport?'Zapisano i dodano do Google Kontaktów':'Zapisano'));render();
-      if(poZapisie)poZapisie(j.osoba);else{closeSheet();if(!nowa)setTimeout(()=>przeladujOsobe(j.osoba.id),220)}}
+      if(poZapisie)poZapisie(j.osoba);else{closeSheet();if(preset&&preset.po)setTimeout(preset.po,220);else if(!nowa)setTimeout(()=>przeladujOsobe(j.osoba.id),220)}}
     catch(e){busy(false);toast('Błąd zapisu: '+e.message)}};
 }
 
 /* ========= kadrowanie + kompresja 800x800 ========= */
+function skaluj(c,max){ // zmniejszanie krokami po 50% — ostrzej niż jednym skokiem
+  let w=c.width,hh=c.height;if(w<=max&&hh<=max)return c;const k=max/Math.max(w,hh),tw=Math.round(w*k),th=Math.round(hh*k);let cur=c;
+  while(w/2>tw&&hh/2>th){w=Math.round(w/2);hh=Math.round(hh/2);const n=document.createElement('canvas');n.width=w;n.height=hh;const x=n.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(cur,0,0,w,hh);cur=n}
+  const o=document.createElement('canvas');o.width=tw;o.height=th;const x=o.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(cur,0,0,tw,th);return o}
 function kadruj(src,done){
   const d=openSheet(`<div class="bar"><button class="btn" data-x>Anuluj</button><button class="btn" data-rot>↻ Obróć</button><button class="btn pri" data-ok>Użyj</button></div>
    <div class="crop-wrap"><img data-img alt=""></div><p style="color:var(--muted);text-align:center">Przesuń i przybliż palcami, żeby twarz wypełniła kwadrat.</p>`);
@@ -401,10 +477,10 @@ function kadruj(src,done){
   d.querySelector('[data-x]').onclick=closeSheet;
   d.querySelector('[data-rot]').onclick=()=>cr&&cr.rotate(90);
   d.querySelector('[data-ok]').onclick=()=>{
-    const c=cr.getCroppedCanvas({maxWidth:800,maxHeight:800,imageSmoothingQuality:'high',fillColor:'#fff'});
-    const full=c.toDataURL('image/jpeg',.82);
-    const m=document.createElement('canvas');m.width=m.height=200;m.getContext('2d').drawImage(c,0,0,200,200);
-    done(full,m.toDataURL('image/jpeg',.72));closeSheet()};
+    const src=cr.getCroppedCanvas({fillColor:'#fff'});          // wycinek w pełnej rozdzielczości oryginału
+    const c=skaluj(src,800),full=c.toDataURL('image/jpeg',.9);
+    const m=skaluj(c,320);let q=.82,mu=m.toDataURL('image/jpeg',q);while(mu.length>45000&&q>.4){q-=.08;mu=m.toDataURL('image/jpeg',q)}
+    done(full,mu);closeSheet()};
 }
 
 /* ========= import z Google Kontaktów ========= */
