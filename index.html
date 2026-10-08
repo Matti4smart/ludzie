@@ -118,6 +118,8 @@ textarea.in{min-height:80px;resize:vertical}
 .kim-p{text-align:center;width:78px;flex:none}.kim-p img,.kim-p .ph{width:70px;height:70px;border-radius:30%;object-fit:cover;background:var(--line);display:grid;place-items:center;margin:0 auto 4px;font:600 24px var(--serif);color:var(--muted)}
 .kim-v{text-align:center;color:var(--muted);font-size:13px}.kim-v strong{display:block;font:600 24px/1.2 var(--serif);color:var(--accent);margin-top:4px}
 .kim-droga{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:14px}.kim-s{color:var(--muted)}.kim-n{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 10px}
+.rn{display:inline-block;background:var(--line);color:var(--accent);font-weight:700;border-radius:6px;padding:0 5px;margin:0 1px;cursor:pointer}.rn small{font-size:10px;margin-left:2px;font-weight:400}
+.rbox{background:var(--surface);border:1px solid var(--accent);border-radius:12px;padding:10px 12px;margin-top:8px}.rbox .chips{padding:8px 0 0}
 .today{background:var(--surface);border-radius:14px;padding:10px 14px;margin:6px 0 14px;border-left:4px solid var(--warm)}
 </style>
 </head>
@@ -143,7 +145,22 @@ const byId=id=>S.osoby.find(o=>o.id===id);
 const nazwa=o=>o?(o.imie+' '+o.nazwisko).trim():'?';
 const ini=o=>h((o.imie||'?')[0]);
 const img=(o,cls='ph')=>o&&o.miniatura?`<img class="${cls}" src="${o.miniatura}" alt="">`:`<div class="ph">${o?ini(o):'+'}</div>`;
-const grupyOf=o=>[...new Set(String(o.grupy||'').split(/[,;\n]+/).map(s=>s.trim()).filter(Boolean))];
+/* ===== liczby rosnące: [⟳N|RRRR-MM|s|k(|limit)] ===== */
+const RTOK=/\[⟳(\d+)\|(\d{4})-(\d{2})\|([sk])(?:\|(\d+))?\]/g;
+const syr=(y,m)=>m>=9?y:y-1;
+function rWart(n,y,m,t){const d=new Date(),cy=d.getFullYear(),cm=d.getMonth()+1;return +n+(t==='s'?syr(cy,cm)-syr(+y,+m):cy-(+y))}
+const rInfo=(n,y,m,t)=>`Wpisano ${n} w ${m}.${y}, rośnie co rok ${t==='s'?'od 1 września':'od 1 stycznia'}`;
+const rosnTxt=s=>String(s||'').replace(RTOK,(_,n,y,m,t)=>rWart(n,y,m,t));
+const rosnHtml=esc=>esc.replace(RTOK,(_,n,y,m,t)=>`<span class="rn" data-i="${rInfo(n,y,m,t)}">${rWart(n,y,m,t)}<small>⟳</small></span>`);
+function rosnGr(raw){let abs=null;const txt=raw.replace(RTOK,(_,n,y,m,t,cap)=>{const v=rWart(n,y,m,t);if(cap&&v>+cap)abs=t==='s'?syr(+y,+m)+(+cap-n)+1:+y+(+cap-n);return v});
+  if(abs!==null)return 'Absolwenci '+(raw.replace(RTOK,'').replace(/^\s*klasa\s*/i,'').trim()||'')+' ('+abs+')';return txt}
+function rebase(s){const d=new Date(),ym=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  return String(s||'').replace(RTOK,(all,n,y,m,t,cap)=>{const v=rWart(n,y,m,t);return cap&&v>+cap?all:`[⟳${v}|${ym}|${t}${cap?'|'+cap:''}]`})}
+const nowyTok=(n,t,cap)=>{const d=new Date();return `[⟳${n}|${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}|${t}${cap?'|'+cap:''}]`};
+document.addEventListener('click',e=>{const r=e.target.closest&&e.target.closest('.rn');if(r){e.stopPropagation();toast(r.dataset.i)}},true);
+const grupyRaw=o=>[...new Set(String(o.grupy||'').split(/[,;\n]+/).map(s=>s.trim()).filter(Boolean))];
+const grupyOf=o=>[...new Set(grupyRaw(o).map(rosnGr))];
+const rawDla=g=>{for(const o of S.osoby)for(const r of grupyRaw(o))if(rosnGr(r)===g)return rebase(r);return g};
 function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}
 function busy(on,t='Chwila…'){let b=$('.busy');if(on&&!b){b=document.createElement('div');b.className='busy';document.body.appendChild(b)}if(b){if(on)b.textContent=t;else b.remove()}}
 
@@ -190,7 +207,7 @@ function vLudzie(){
   const q=norm(S.q),srt=S.sort==='az'?(a,b)=>nazwa(a).localeCompare(nazwa(b),'pl'):nowsi;
   const focused=document.activeElement&&document.activeElement.id==='q';
   let body;
-  if(q){const w=S.osoby.filter(o=>norm([o.imie,o.nazwisko,o.gdzie,o.kiedy,o.skojarzenie,o.notatki,o.grupy,o.telefon].join(' ')).includes(q)).sort(srt);
+  if(q){const w=S.osoby.filter(o=>norm([o.imie,o.nazwisko,o.gdzie,o.kiedy,o.skojarzenie,rosnTxt(o.notatki),grupyOf(o).join(' '),o.telefon].join(' ')).includes(q)).sort(srt);
     body=`<div class="sec"><h3>Wyniki: ${w.length}</h3></div>${w.length?`<div class="grid">${w.map(faceHtml).join('')}</div>`:'<p class="empty">Nikt nie pasuje do wyszukiwania.</p>'}`}
   else if(!S.osoby.length)body='<p class="empty">Album jest pusty. Dodaj pierwszą osobę albo zaimportuj kontakty z Google w Ustawieniach.</p>';
   else{const ost=S.osoby.slice().sort(nowsi).slice(0,10),gr=listaGrup(),rd=rodziny(),dz=nadchodzace(1);
@@ -220,9 +237,9 @@ function otworzGrupe(g){
   d.querySelector('[data-gadd]').onclick=()=>{const w=openSheet(`<div class="bar"><button class="btn" data-x>← Wróć</button></div><h1 class="p-name" style="text-align:left;font-size:26px">Dodaj do: ${h(g)}</h1>
      <button class="btn pri wide" data-n>+ Nowa osoba</button><button class="btn wide" data-e>Wybierz z istniejących</button>`);
     w.querySelector('[data-x]').onclick=closeSheet;
-    w.querySelector('[data-n]').onclick=()=>formularz(null,null,{grupy:g,po:()=>{closeSheet();setTimeout(odnow,220)}});
+    w.querySelector('[data-n]').onclick=()=>formularz(null,null,{grupy:rawDla(g),po:()=>{closeSheet();setTimeout(odnow,220)}});
     w.querySelector('[data-e]').onclick=()=>wybierzOsobe('Dodaj do: '+h(g),l.map(o=>o.id),async id=>{const o=byId(id);busy(true);
-      try{const j=await api('zapisz',{osoba:{...o,grupy:[...grupyOf(o),g].join(', ')}});Object.assign(o,j.osoba);zapiszCache();busy(false);toast(nazwa(o)+' dodany do grupy');history.go(-2);setTimeout(()=>otworzGrupe(g),260);render()}catch(e){busy(false);toast(e.message)}})};
+      try{const j=await api('zapisz',{osoba:{...o,grupy:[...grupyRaw(o),rawDla(g)].join(', ')}});Object.assign(o,j.osoba);zapiszCache();busy(false);toast(nazwa(o)+' dodany do grupy');history.go(-2);setTimeout(()=>otworzGrupe(g),260);render()}catch(e){busy(false);toast(e.message)}})};
 }
 function vDaty(){
   const l=nadchodzace(60);
@@ -236,14 +253,17 @@ function vUst(){
   <label>Adres aplikacji Apps Script <small>(kończy się na /exec)</small></label><input class="in" id="u-url" value="${h(cfg.url||'')}" placeholder="https://script.google.com/macros/s/…/exec">
   <label>Token dostępu <small>(z logu funkcji setup)</small></label><input class="in" id="u-tok" value="${h(cfg.token||'')}">
   <button class="btn pri wide" id="u-save">Zapisz i połącz</button>
-  <h2>Google Kontakty</h2><p style="color:var(--muted);margin:0">Wybierz kontakty do przeniesienia. Imię, telefon, urodziny i zdjęcie przejdą automatycznie.</p>
+  <h2>Google Kontakty</h2><p style="color:var(--muted);margin:0">Wybierz kontakty do przeniesienia. Imię, telefon, urodziny, zdjęcie, notatki, skojarzenie i etykiety (jako grupy) przejdą automatycznie.</p>
   <button class="btn wide" id="u-imp">Importuj z Google Kontaktów</button>
   <button class="btn wide" id="u-gfoto">Pobierz brakujące zdjęcia z Google</button>
+  <button class="btn wide" id="u-gsync">Synchronizuj teraz z Google</button>
+  <p style="color:var(--muted);font-size:14px;margin:6px 0 0">Działa w obie strony: zmiany z aplikacji idą do Google, zmiany z Google do aplikacji. Gdy to samo pole zmieniono w obu miejscach, wygrywa nowsza zmiana; notatki i grupy są łączone, nic nie jest kasowane. Synchronizacja włącza się też sama co godzinę.</p>
   <h2>Dane</h2><p style="color:var(--muted);margin:0">Osób: ${S.osoby.length}, powiązań: ${S.relacje.length}.</p>
   <button class="btn wide" id="u-ref">Odśwież z serwera</button>
   <button class="btn wide" id="u-fix">Uzupełnij powiązania rodzinne</button><p style="color:var(--muted);font-size:14px">Dopisuje brakujące powiązania, np. dzieci Marcina także jego partnerce.</p></main>`;
   $('#u-save').onclick=async()=>{cfg={url:$('#u-url').value.trim(),token:$('#u-tok').value.trim()};localStorage.setItem('cfg',JSON.stringify(cfg));busy(true,'Łączę…');try{await api('lista');busy(false);toast('Połączono');S.view='ludzie';odswiez()}catch(e){busy(false);toast('Błąd: '+e.message)}};
   $('#u-imp').onclick=importGoogle;
+  $('#u-gsync').onclick=async()=>{busy(true,'Synchronizuję z Google…');try{const j=await api('googleSyncTeraz');await odswiez();busy(false);toast(`Sprawdzono: ${j.sprawdzono}, zaktualizowano: ${j.zmieniono}`+(j.brakWGoogle?`, usuniętych z Google: ${j.brakWGoogle}`:'')+(j.blad?` (błąd: ${j.blad})`:''))}catch(e){busy(false);toast(e.message)}};
   $('#u-gfoto').onclick=async()=>{busy(true,'Pobieram zdjęcia…');try{const j=await api('googleFotoBrakujace');j.osoby.forEach(o=>{const i=S.osoby.findIndex(x=>x.id===o.id);if(i>=0)S.osoby[i]=o});zapiszCache();busy(false);toast(`Uzupełniono zdjęć: ${j.osoby.length} z ${j.sprawdzono}`+(j.blad?` (błąd: ${j.blad})`:''));render()}catch(e){busy(false);toast(e.message)}}; $('#u-fix').onclick=async()=>{busy(true,'Uzupełniam…');try{const n=await dodajRelacje(S.relacje.flatMap(uzupelnienia).map(x=>({...x,auto:true})));busy(false);toast(n?'Dodano powiązań: '+n:'Wszystko było kompletne')}catch(e){busy(false);toast(e.message)}};
   $('#u-ref').onclick=async()=>{busy(true);await odswiez();busy(false);toast('Odświeżono')};
 }
@@ -289,7 +309,7 @@ function otworzOsobe(id){
    <dl>${tel?`<div><dt>Telefon</dt><dd>${h(o.telefon)}</dd></div>`:''}
    ${ur?`<div><dt>Urodziny</dt><dd>${h(o.urodziny)}${wiek}${ur.d?', '+kiedyTxt(dniDo(ur)):''}</dd></div>`:''}
    ${grupyOf(o).length?`<div><dt>Grupy</dt><dd>${grupyOf(o).map(h).join(', ')}</dd></div>`:''}
-   ${o.notatki?`<div style="display:block"><dt>Notatki</dt><dd style="text-align:left;white-space:pre-wrap;margin-top:4px">${h(o.notatki)}</dd></div>`:''}</dl>
+   ${o.notatki?`<div style="display:block"><dt>Notatki</dt><dd style="text-align:left;white-space:pre-wrap;margin-top:4px">${rosnHtml(h(o.notatki))}</dd></div>`:''}</dl>
    <h2>Rodzina</h2>${drzewo(id)}${S.relacje.some(r=>r.a===id||r.b===id)?'<button class="btn wide" data-fam>👪 Pokaż całą rodzinę</button>':''}
    ${rels.length?`<div class="rel-list">${rels.map(r=>{const x=opisRelacji(r,id);return `<div class="row"><div class="grow">${h(nazwa(x.inny))} <small style="color:var(--muted)">— ${x.t}</small></div><button class="x" data-rdel="${r.id}" aria-label="Usuń powiązanie">×</button></div>`}).join('')}</div>`:''}
    <h2>Google Kontakty</h2>${o.google?'<p style="color:var(--muted);margin:0">Ta osoba jest w Twoich Google Kontaktach. Nowe zdjęcie dodane tutaj trafi też do Google.</p><button class="btn wide" data-gfoto>Pobierz zdjęcie z Google</button>':'<button class="btn wide" data-gexp>Dodaj do Google Kontaktów</button>'}
@@ -416,8 +436,8 @@ function vRodziny(){
 
 /* ========= formularz osoby ========= */
 function formularz(o,poZapisie,preset){
-  const nowa=!o;o=o||{...(preset||{})};const wybrane=new Set(grupyOf(o));let foto=null,mini=null;const pend=[];
-  const grupy=[...new Set(S.osoby.flatMap(grupyOf))];
+  const nowa=!o;o=o||{...(preset||{})};const wybrane=new Map(grupyRaw(o).map(r=>[rosnGr(r),rebase(r)]));let gm='s';let foto=null,mini=null;const pend=[];
+  const grupy=new Map();S.osoby.forEach(x=>grupyRaw(x).forEach(r=>{const k=rosnGr(r);if(!grupy.has(k))grupy.set(k,rebase(r))}));
   const picker='contacts' in navigator&&'ContactsManager' in window;
   const d=openSheet(`<div class="bar"><button class="btn" data-x>Anuluj</button><button class="btn pri" data-save>Zapisz</button></div>
    <h1 class="p-name" style="text-align:left;font-size:26px">${nowa?'Nowa osoba':'Edycja'}</h1>
@@ -428,16 +448,40 @@ function formularz(o,poZapisie,preset){
    <div class="two"><div><label>Imię</label><input class="in" name="imie" value="${h(o.imie)}" autocomplete="off"></div><div><label>Nazwisko</label><input class="in" name="nazwisko" value="${h(o.nazwisko)}" autocomplete="off"></div></div>
    <label>Telefon</label><input class="in" name="telefon" type="tel" value="${h(o.telefon)}">
    <label>Skojarzenie <small>— coś, co pomoże przypomnieć sobie tę osobę</small></label><input class="in" name="skojarzenie" value="${h(o.skojarzenie)}" placeholder="np. wysoki, rude włosy, jeździ czerwonym Passatem">
-   <label>Grupy / tagi <small>— dotknij, aby zaznaczyć; można kilka</small></label><div class="gpick" data-gp></div><div class="gadd"><input class="in" data-gn placeholder="Nowa grupa, np. Eduhub"><button class="btn" data-gb>Dodaj</button></div>
+   <label>Grupy / tagi <small>— dotknij, aby zaznaczyć; można kilka</small></label><div class="gpick" data-gp></div><div class="gadd"><input class="in" data-gn placeholder="Nowa grupa, np. Klasa 2B"><button class="btn" data-gb>Dodaj</button></div>
+   <div class="rbox" data-rb hidden><label class="check" style="margin:0"><input type="checkbox" data-rc> <span data-rl></span></label>
+     <div data-ro><div class="chips"><button class="chip on" data-rm="s">Od 1 września</button><button class="chip" data-rm="k">Od 1 stycznia</button></div>
+     <label class="check" style="margin:8px 0 0;font-weight:400;font-size:14px" data-rcapw><input type="checkbox" data-rcap checked> Po klasie 8 pokaż „Absolwenci”</label></div></div>
    <label>Urodziny <small>DD.MM.RRRR, DD.MM albo sam rok</small></label><input class="in" name="urodziny" inputmode="decimal" value="${h(o.urodziny)}" placeholder="12.05.1985 lub 1985">
-   <label>Notatki</label><textarea class="in" name="notatki">${h(o.notatki)}</textarea>
+   <label>Notatki</label><textarea class="in" name="notatki">${h(rebase(o.notatki))}</textarea>
+   <button class="btn wide" data-nrb style="margin-top:8px">⟳ Wstaw liczbę rosnącą</button>
+   <div class="rbox" data-nr hidden><div class="two"><div><label style="margin-top:0">Liczba teraz</label><input class="in" data-nn type="number" inputmode="numeric" placeholder="3"></div>
+     <div><label style="margin-top:0">Rośnie</label><div class="chips" style="padding:4px 0 0"><button class="chip on" data-nm="s">od 1.09</button><button class="chip" data-nm="k">od 1.01</button></div></div></div>
+     <button class="btn pri wide" data-nw>Wstaw w notatkę</button><p style="color:var(--muted);font-size:13px;margin:6px 0 0">Np. „Natalia jest w [3] klasie”. Za rok aplikacja pokaże 4.</p></div>
    ${poZapisie?'':'<h2>Powiązania rodzinne</h2><div data-rels></div><button class="btn wide" data-radd>+ Dodaj powiązanie</button>'}
    ${o.google?'':'<label class="check"><input type="checkbox" data-gexp> Dodaj też do Google Kontaktów</label>'}`);
   const f=n=>d.querySelector(`[name="${n}"]`);
-  const rysujGr=()=>{const all=[...new Set([...grupy,...wybrane])].sort((a,b)=>a.localeCompare(b,'pl'));const el=d.querySelector('[data-gp]');
-    el.innerHTML=all.length?all.map(g=>`<button class="chip ${wybrane.has(g)?'on':''}" data-gc="${h(g)}">${wybrane.has(g)?'✓ ':''}${h(g)}</button>`).join(''):'<small style="color:var(--muted)">Brak grup — dodaj pierwszą poniżej.</small>';
-    el.querySelectorAll('[data-gc]').forEach(b=>b.onclick=()=>{const g=b.dataset.gc;wybrane.has(g)?wybrane.delete(g):wybrane.add(g);rysujGr()})};
-  const dodajGr=()=>{const i=d.querySelector('[data-gn]');i.value.split(/[,;]+/).map(x=>x.trim()).filter(Boolean).forEach(g=>wybrane.add(g));i.value='';rysujGr()};
+  const rysujGr=()=>{const all=[...new Set([...grupy.keys(),...wybrane.keys()])].sort((a,b)=>a.localeCompare(b,'pl'));const el=d.querySelector('[data-gp]');
+    const raw=k=>wybrane.get(k)||grupy.get(k)||k;
+    el.innerHTML=all.length?all.map(g=>`<button class="chip ${wybrane.has(g)?'on':''}" data-gc="${h(g)}">${wybrane.has(g)?'✓ ':''}${h(g)}${raw(g).includes('[⟳')?' ⟳':''}</button>`).join(''):'<small style="color:var(--muted)">Brak grup — dodaj pierwszą poniżej.</small>';
+
+    el.querySelectorAll('[data-gc]').forEach(b=>b.onclick=()=>{const g=b.dataset.gc;wybrane.has(g)?wybrane.delete(g):wybrane.set(g,grupy.get(g)||g);rysujGr()})};
+  const gn=d.querySelector('[data-gn]'),rb=d.querySelector('[data-rb]');
+  const rbUpd=()=>{const m=gn.value.match(/\d+/);rb.hidden=!m;if(!m)return;
+    d.querySelector('[data-rl]').textContent=`Liczba „${m[0]}” rośnie co rok`;
+    d.querySelector('[data-ro]').style.opacity=d.querySelector('[data-rc]').checked?1:.4;
+    d.querySelector('[data-rcapw]').hidden=!/^\s*klasa/i.test(gn.value);
+    d.querySelectorAll('[data-rm]').forEach(b=>b.classList.toggle('on',b.dataset.rm===gm))};
+  gn.oninput=rbUpd;d.querySelector('[data-rc]').onchange=rbUpd;d.querySelectorAll('[data-rm]').forEach(b=>b.onclick=e=>{e.preventDefault();gm=b.dataset.rm;rbUpd()});
+  const dodajGr=()=>{const rc=d.querySelector('[data-rc]').checked,cap=/^\s*klasa/i.test(gn.value)&&d.querySelector('[data-rcap]').checked?8:0;
+    gn.value.split(/[,;]+/).map(x=>x.trim()).filter(Boolean).forEach(g=>{const r=rc?g.replace(/\d+/,n=>nowyTok(n,gm,cap)):g;wybrane.set(rosnGr(r),r)});
+    gn.value='';d.querySelector('[data-rc]').checked=false;rbUpd();rysujGr()};
+  let nm='s';const nr=d.querySelector('[data-nr]'),ta=f('notatki');
+  d.querySelector('[data-nrb]').onclick=e=>{e.preventDefault();nr.hidden=!nr.hidden;if(!nr.hidden)d.querySelector('[data-nn]').focus()};
+  d.querySelectorAll('[data-nm]').forEach(b=>b.onclick=e=>{e.preventDefault();nm=b.dataset.nm;d.querySelectorAll('[data-nm]').forEach(x=>x.classList.toggle('on',x===b))});
+  d.querySelector('[data-nw]').onclick=e=>{e.preventDefault();const n=parseInt(d.querySelector('[data-nn]').value,10);if(isNaN(n)){toast('Wpisz liczbę');return}
+    const t=nowyTok(n,nm),p=ta.selectionStart??ta.value.length;ta.value=ta.value.slice(0,p)+t+ta.value.slice(ta.selectionEnd??p);
+    d.querySelector('[data-nn]').value='';nr.hidden=true;toast('Wstawiono '+n+' ⟳ — za rok pokaże się '+(n+1))};
   d.querySelector('[data-gb]').onclick=dodajGr;d.querySelector('[data-gn]').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();dodajGr()}};rysujGr();
   d.querySelector('[data-x]').onclick=closeSheet;
   d.querySelector('[data-cam]').onclick=()=>d.querySelector('[data-fcam]').click();
@@ -450,7 +494,7 @@ function formularz(o,poZapisie,preset){
     el.querySelectorAll('[data-pdel]').forEach(b=>b.onclick=()=>{pend.splice(+b.dataset.pdel,1);rysujPend()})};
   const ra=d.querySelector('[data-radd]');if(ra)ra.onclick=()=>wybierzTyp(rel=>wybierzOsobe(RELN[rel],[o.id,...pend.map(p=>p.id)].filter(Boolean),inny=>{pend.push({rel,id:inny});closeSheet();rysujPend()}));
   d.querySelector('[data-save]').onclick=async()=>{
-    const os={...o};['imie','nazwisko','telefon','skojarzenie','urodziny','notatki'].forEach(k=>os[k]=f(k).value.trim());os.grupy=[...wybrane].join(', ');
+    const os={...o};['imie','nazwisko','telefon','skojarzenie','urodziny','notatki'].forEach(k=>os[k]=f(k).value.trim());os.grupy=[...wybrane.values()].join(', ');
     if(!os.imie){toast('Wpisz imię');return}
     if(os.urodziny&&!parseDM(os.urodziny)){toast('Urodziny: wpisz DD.MM.RRRR, DD.MM albo sam rok RRRR');return}
     const payload={osoba:os,eksport:!!(d.querySelector('[data-gexp]')||{}).checked};
@@ -489,9 +533,12 @@ async function importGoogle(){
   try{k=(await api('googleLista')).kontakty}catch(e){busy(false);toast(e.message);return}busy(false);
   const sel=new Set();
   let bf=0,bl='';const d=openSheet(`<div class="bar"><button class="btn" data-x>← Wróć</button><button class="btn pri" data-go>Importuj (0)</button></div>
-   <h1 class="p-name" style="text-align:left;font-size:26px">Google Kontakty</h1><input class="search" style="margin-top:12px" placeholder="Szukaj…" data-q><div data-list></div>`);
+   <h1 class="p-name" style="text-align:left;font-size:26px">Google Kontakty</h1>
+   ${(()=>{const e=[...new Set(k.flatMap(c=>c.etykiety||[]))].sort((a,b)=>a.localeCompare(b,'pl'));return e.length?`<p class="gen-l" style="margin:10px 0 0;text-align:left">Etykiety — dotknij, aby zaznaczyć wszystkie z etykiety</p><div class="chips" style="flex-wrap:wrap">${e.map(x=>`<button class="chip" data-et="${h(x)}">${h(x)} (${k.filter(c=>(c.etykiety||[]).includes(x)&&!c.juz).length})</button>`).join('')}</div>`:''})()}
+   <input class="search" style="margin-top:12px" placeholder="Szukaj…" data-q><div data-list></div>`);
+  d.querySelectorAll('[data-et]').forEach(b=>b.onclick=()=>{const x=b.dataset.et,on=!b.classList.contains('on');b.classList.toggle('on',on);k.forEach(c=>{if(!c.juz&&(c.etykiety||[]).includes(x))on?sel.add(c.rn):sel.delete(c.rn)});d.querySelector('[data-go]').textContent=`Importuj (${sel.size})`;lista()});
   const lista=()=>{const q=norm(d.querySelector('[data-q]').value);d.querySelector('[data-list]').innerHTML=k.filter(c=>!q||norm(c.nazwa+' '+c.tel).includes(q)).slice(0,300)
-    .map(c=>`<label class="row check ${c.juz?'pick-row dis':''}" style="margin:0"><input type="checkbox" data-rn="${h(c.rn)}" ${sel.has(c.rn)?'checked':''} ${c.juz?'disabled':''}><div class="grow">${h(c.nazwa)}<br><small style="color:var(--muted)">${h(c.tel)}${c.maFoto?' 📷':''}${c.juz?' (już w bazie)':''}</small></div></label>`).join('');
+    .map(c=>`<label class="row check ${c.juz?'pick-row dis':''}" style="margin:0"><input type="checkbox" data-rn="${h(c.rn)}" ${sel.has(c.rn)?'checked':''} ${c.juz?'disabled':''}><div class="grow">${h(c.nazwa)}<br><small style="color:var(--muted)">${h(c.tel)}${c.maFoto?' 📷':''}${(c.etykiety||[]).length?' · '+c.etykiety.map(h).join(', '):''}${c.juz?' (już w bazie)':''}</small></div></label>`).join('');
     d.querySelectorAll('[data-rn]').forEach(i=>i.onchange=()=>{i.checked?sel.add(i.dataset.rn):sel.delete(i.dataset.rn);d.querySelector('[data-go]').textContent=`Importuj (${sel.size})`})};
   d.querySelector('[data-q]').oninput=lista;lista();
   d.querySelector('[data-x]').onclick=closeSheet;
