@@ -144,15 +144,6 @@ textarea.in{min-height:80px;resize:vertical}
 .fab{background:var(--ink);color:var(--bg);border-radius:999px;box-shadow:0 6px 18px rgba(31,43,34,.28)}
 nav.tabs button.on{color:var(--ink)}
 .p-photo{border-radius:50%}.p-name,.sec h3,h2{font-family:var(--sans);font-weight:700}
-.siec{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:6px;margin:4px 0 8px;position:relative}
-.siec svg{display:block;width:100%;touch-action:none}
-.siec .full{position:absolute;right:10px;top:10px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 10px;font-size:13px}
-.sn{cursor:pointer;transition:opacity .2s}.sn text{font:600 10px var(--sans);fill:var(--ink)}.sh text{font:600 10px var(--sans)}
-.leg{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}
-.leg button{flex:none;border:0;border-radius:999px;padding:4px 11px;font-size:13px;font-weight:600;background:var(--lb);color:var(--lc)}
-.leg button.on{outline:2px solid var(--lc)}
-.ins{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;font-size:14px;margin-bottom:6px}
-@media (prefers-reduced-motion:reduce){.sn{transition:none}}
 </style>
 </head>
 <body>
@@ -264,63 +255,6 @@ const PAL=['#1F9E89','#6C5CE7','#D9902F','#2F7FD8','#D6588F','#4C9A2A','#8E6CC9'
 const kolorGr=g=>{let x=7;for(const c of g)x=(x*31+c.charCodeAt(0))>>>0;return PAL[x%PAL.length]};
 const tlo=c=>c+'22';
 const kolorOs=o=>{const g=grupyOf(o)[0];return g?kolorGr(g):(S.relacje.some(r=>r.a===o.id||r.b===o.id)?'var(--fam)':'var(--line)')};
-function stopnie(){const d={};S.relacje.forEach(r=>{d[r.a]=(d[r.a]||0)+1;d[r.b]=(d[r.b]||0)+1});
-  listaGrup().forEach(([g,ids])=>{if(ids.length>1)ids.forEach(i=>d[i]=(d[i]||0)+ids.length-1)});return d}
-let SIEC_CACHE={};
-function modelSieci(maxN){
-  const sig=maxN+'|'+S.osoby.map(o=>o.id+o.grupy).join()+'|'+S.relacje.map(r=>r.id).join()+'|'+(cfg.ja||'');
-  if(SIEC_CACHE[maxN]&&SIEC_CACHE[maxN].sig===sig)return SIEC_CACHE[maxN];
-  const deg=stopnie();let ppl=S.osoby.filter(o=>deg[o.id]||o.id===cfg.ja).sort((a,b)=>(deg[b.id]||0)-(deg[a.id]||0)).slice(0,maxN);
-  if(cfg.ja&&byId(cfg.ja)&&!ppl.some(o=>o.id===cfg.ja))ppl.unshift(byId(cfg.ja));
-  const ids=new Set(ppl.map(o=>o.id)),N=[],E=[],idx={};
-  ppl.forEach(o=>{idx[o.id]=N.length;N.push({id:o.id,t:'p',o,ja:o.id===cfg.ja})});
-  listaGrup().forEach(([g,m])=>{const w=m.filter(i=>ids.has(i));if(w.length<2)return;idx['g:'+g]=N.length;N.push({id:'g:'+g,t:'g',g,c:kolorGr(g)});w.forEach(i=>E.push({a:idx[i],b:idx['g:'+g],c:kolorGr(g),g,L:52}))});
-  S.relacje.forEach(r=>{if(ids.has(r.a)&&ids.has(r.b))E.push({a:idx[r.a],b:idx[r.b],c:'var(--fam)',f:1,L:44})});
-  const n=N.length;N.forEach((v,i)=>{const a=i*2.399,rr=30+Math.sqrt(i)*28;v.x=Math.cos(a)*rr;v.y=Math.sin(a)*rr});
-  for(let it=0;it<320;it++){const k=1-it/320;
-    for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){const A=N[i],B=N[j];let dx=A.x-B.x,dy=A.y-B.y,d2=dx*dx+dy*dy+.01;const f=900/d2;dx*=f;dy*=f;A.x+=dx;A.y+=dy;B.x-=dx;B.y-=dy}
-    E.forEach(e=>{const A=N[e.a],B=N[e.b],dx=B.x-A.x,dy=B.y-A.y,d=Math.sqrt(dx*dx+dy*dy)+.01,f=(d-e.L)/d*.08;A.x+=dx*f;A.y+=dy*f;B.x-=dx*f;B.y-=dy*f});
-    N.forEach(v=>{v.x*=1-.012*k;v.y*=1-.012*k;if(v.ja){v.x=0;v.y=0}})}
-  const W=maxN>60?620:340,H=maxN>60?760:250,pad=30;
-  if(n){const x0=Math.min(...N.map(v=>v.x)),x1=Math.max(...N.map(v=>v.x)),y0=Math.min(...N.map(v=>v.y)),y1=Math.max(...N.map(v=>v.y));
-    const k=Math.min((W-2*pad)/Math.max(x1-x0,1),(H-2*pad)/Math.max(y1-y0,1),1.8);
-    N.forEach(v=>{v.x=W/2+(v.x-(x0+x1)/2)*k;v.y=H/2+(v.y-(y0+y1)/2)*k})}
-  const m={N,E,sig,box:[0,0,W,H]};
-  SIEC_CACHE[maxN]=m;return m}
-function siecSvg(m,etyk){
-  const R=v=>v.ja?22:16;
-  return `<svg viewBox="${m.box.map(Math.round).join(' ')}" role="img" aria-label="Sieć powiązań między osobami"><defs>${m.N.filter(v=>v.t==='p'&&v.o.miniatura).map(v=>`<clipPath id="cp-${v.id}"><circle cx="${v.x.toFixed(1)}" cy="${v.y.toFixed(1)}" r="${R(v)}"/></clipPath>`).join('')}</defs>
-   ${m.E.map(e=>{const A=m.N[e.a],B=m.N[e.b];return `<line class="se" data-eg="${e.f?'#rodzina':h(e.g)}" x1="${A.x.toFixed(1)}" y1="${A.y.toFixed(1)}" x2="${B.x.toFixed(1)}" y2="${B.y.toFixed(1)}" stroke="${e.c}" stroke-width="${e.f?2.4:1.6}" opacity="${e.f?.9:.55}"/>`}).join('')}
-   ${m.N.map(v=>{const x=v.x.toFixed(1),y=v.y.toFixed(1);
-     if(v.t==='g')return `<g class="sn sh" data-sg="${h(v.g)}" data-gs="${h(v.g)}"><circle cx="${x}" cy="${y}" r="7" fill="${v.c}"/>${etyk?`<text x="${x}" y="${(v.y+19).toFixed(1)}" text-anchor="middle" fill="${v.c}">${h(v.g)}</text>`:''}</g>`;
-     const o=v.o,r=R(v),c=v.ja?'var(--ink)':kolorOs(o),gs=[...grupyOf(o),...(S.relacje.some(z=>z.a===o.id||z.b===o.id)?['#rodzina']:[])].map(h).join('|');
-     return `<g class="sn" data-pid="${o.id}" data-gs="${gs}"><circle cx="${x}" cy="${y}" r="${r+2.5}" fill="var(--surface)" stroke="${c}" stroke-width="2.5"/>
-       ${o.miniatura?`<image href="${o.miniatura}" x="${(v.x-r).toFixed(1)}" y="${(v.y-r).toFixed(1)}" width="${r*2}" height="${r*2}" clip-path="url(#cp-${o.id})" preserveAspectRatio="xMidYMid slice"/>`:`<circle cx="${x}" cy="${y}" r="${r}" fill="${v.ja?'var(--ink)':tlo(c.startsWith('#')?c:'#E2725B')}"/><text x="${x}" y="${(v.y+4).toFixed(1)}" text-anchor="middle" style="font-size:${v.ja?13:12}px;fill:${v.ja?'var(--bg)':'var(--ink)'}">${v.ja&&!o.miniatura?'Ty':h((o.imie||'?')[0])}</text>`}
-       ${o.smierc?`<path d="M${(v.x+r-6).toFixed(1)} ${(v.y-r-2).toFixed(1)}l3 0 1 4 1-4 3 0-3 9z" fill="#111" stroke="#fff" stroke-width=".8"/>`:''}
-       ${etyk?`<text x="${x}" y="${(v.y+r+14).toFixed(1)}" text-anchor="middle">${h(o.imie)}</text>`:''}</g>`}).join('')}</svg>`}
-function legenda(m){const gs=[...new Set(m.N.filter(v=>v.t==='g').map(v=>v.g))];const fam=m.E.some(e=>e.f);
-  return `<div class="leg">${fam?`<button data-hl="#rodzina" style="--lb:${tlo('#E2725B')};--lc:#C0533C">Rodzina</button>`:''}${gs.map(g=>`<button data-hl="${h(g)}" style="--lb:${tlo(kolorGr(g))};--lc:${kolorGr(g)}">${h(g)}</button>`).join('')}</div>`}
-function podepnijSiec(root){
-  root.querySelectorAll('[data-pid]').forEach(g=>g.onclick=()=>otworzOsobe(g.dataset.pid));
-  root.querySelectorAll('[data-sg]').forEach(g=>g.onclick=()=>otworzGrupe(g.dataset.sg));
-  root.querySelectorAll('[data-hl]').forEach(b=>b.onclick=()=>{const on=!b.classList.contains('on');root.querySelectorAll('[data-hl]').forEach(x=>x.classList.remove('on'));if(on)b.classList.add('on');
-    const k=on?b.dataset.hl:null;root.querySelectorAll('[data-gs]').forEach(n=>n.style.opacity=!k||n.dataset.gs.split('|').includes(k)?1:.15);
-    root.querySelectorAll('[data-eg]').forEach(e=>e.style.opacity=!k||e.dataset.eg===k?'':.06)})}
-function wglad(){const deg=stopnie(),top=S.osoby.filter(o=>deg[o.id]&&o.id!==cfg.ja).sort((a,b)=>deg[b.id]-deg[a.id])[0];if(!top)return'';
-  return `<div class="ins">Najbardziej ${kob(top)?'połączona':'połączony'}: <b>${h(nazwa(top))}</b> — ${deg[top.id]} więzi${grupyOf(top).length?` w ${grupyOf(top).length} ${grupyOf(top).length===1?'grupie':'grupach'}`:''}</div>`}
-function pelnaSiec(){const m=modelSieci(150);
-  const d=openSheet(`<div class="bar"><button class="btn" data-x>← Wróć</button><span style="color:var(--muted);font-size:13px">przesuwaj i przybliżaj palcami</span></div>${legenda(m)}<div class="siec" style="height:70vh">${siecSvg(m,true)}</div>`);
-  d.querySelector('[data-x]').onclick=closeSheet;podepnijSiec(d);
-  const svg=d.querySelector('svg');svg.style.height='100%';let vb=m.box.slice();const set=()=>svg.setAttribute('viewBox',vb.join(' '));
-  const pts=new Map();let d0=0,vb0=null,moved=false;
-  svg.addEventListener('pointerdown',e=>{pts.set(e.pointerId,{x:e.clientX,y:e.clientY});vb0=vb.slice();moved=false;if(pts.size===2){const[a,b]=[...pts.values()];d0=Math.hypot(a.x-b.x,a.y-b.y)}});
-  svg.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;const p0=pts.get(e.pointerId),sc=vb[2]/svg.clientWidth;
-    if(pts.size===1){const dx=(e.clientX-p0.x)*sc,dy=(e.clientY-p0.y)*sc;if(Math.abs(dx)+Math.abs(dy)>2/sc*sc)moved=true;vb[0]-=dx;vb[1]-=dy;p0.x=e.clientX;p0.y=e.clientY;set()}
-    else{p0.x=e.clientX;p0.y=e.clientY;const[a,b]=[...pts.values()],dd=Math.hypot(a.x-b.x,a.y-b.y);if(d0){const f=d0/dd,cx=vb0[0]+vb0[2]/2,cy=vb0[1]+vb0[3]/2;vb=[cx-vb0[2]*f/2,cy-vb0[3]*f/2,vb0[2]*f,vb0[3]*f];set();moved=true}}});
-  const up=e=>{pts.delete(e.pointerId);if(pts.size<2){d0=0;vb0=vb.slice()}};svg.addEventListener('pointerup',up);svg.addEventListener('pointercancel',up);
-  svg.addEventListener('click',e=>{if(moved){e.stopPropagation();moved=false}},true);
-  svg.addEventListener('wheel',e=>{e.preventDefault();const f=e.deltaY>0?1.12:.89,cx=vb[0]+vb[2]/2,cy=vb[1]+vb[3]/2;vb=[cx-vb[2]*f/2,cy-vb[3]*f/2,vb[2]*f,vb[3]*f];set()},{passive:false});
-}
 const stackHtml=ids=>`<div class="stack">${ids.slice(0,4).map(i=>img(byId(i))).join('')}</div>`;
 const nowsi=(a,b)=>String(b.utworzono).localeCompare(String(a.utworzono));
 function podepnij(root){root.querySelectorAll('.face[data-id]').forEach(b=>b.onclick=()=>otworzOsobe(b.dataset.id));
@@ -334,9 +268,7 @@ function vLudzie(){
     body=`<div class="sec"><h3>Wyniki: ${w.length}</h3></div>${w.length?`<div class="grid">${w.map(faceHtml).join('')}</div>`:'<p class="empty">Nikt nie pasuje do wyszukiwania.</p>'}`}
   else if(!S.osoby.length)body='<p class="empty">Album jest pusty. Dodaj pierwszą osobę albo zaimportuj kontakty z Google w Ustawieniach.</p>';
   else{const ost=S.osoby.slice().sort(nowsi).slice(0,10),gr=listaGrup(),rd=rodziny(),dz=nadchodzace(1);
-    const sm=modelSieci(40),maSiec=sm.N.length>1;
-    body=`${maSiec?`<div class="sec"><h3>Sieć więzi</h3></div>${legenda(sm)}<div class="siec">${siecSvg(sm,sm.N.length<=28)}<button class="full" data-fullnet>Pełny widok</button></div>${wglad()}`:''}
-    <div class="sec"><h3>Ostatnio poznani</h3></div><div class="strip">${ost.map(faceHtml).join('')}</div>
+    body=`<div class="sec"><h3>Ostatnio poznani</h3></div><div class="strip">${ost.map(faceHtml).join('')}</div>
     ${gr.length||rd.length?`<div class="sec"><h3>Grupy i rodziny</h3></div><div class="strip">${gr.map(([g,ids])=>`<button class="gcard" style="--gc:${kolorGr(g)}" data-g="${h(g)}">${stackHtml(ids)}<b>${h(g)}</b><small>osób: ${ids.length}</small></button>`).join('')}${rd.map(ids=>`<button class="gcard" style="--gc:var(--fam)" data-f="${ids[0]}">${stackHtml(ids)}<b>${h(nazwaRodziny(ids))}</b><small>osób: ${ids.length}</small></button>`).join('')}</div>`:''}
     ${dz.length?`<div class="today">${dz.map(x=>`${x.d?'Jutro':'Dziś'} ${x.l.toLowerCase()}: <b>${h(nazwa(x.o))}</b>${h(x.extra)}`).join('<br>')}</div>`:''}
     <div class="sec"><h3>Wszyscy</h3><small style="color:var(--muted)">od najnowszych</small></div>
@@ -345,7 +277,7 @@ function vLudzie(){
     <input id="q" class="search" type="search" placeholder="Szukaj: imię, grupa, skojarzenie…" value="${h(S.q)}"></div><main>${body}</main>`;
   const qi=$('#q');qi.oninput=e=>{S.q=e.target.value;const pos=e.target.selectionStart;vLudzie();const n=$('#q');n.focus();n.setSelectionRange(pos,pos)};
   if(focused){qi.focus();qi.setSelectionRange(qi.value.length,qi.value.length)}
-  podepnij($('#app'));podepnijSiec($('#app'));const fn=$('[data-fullnet]');if(fn)fn.onclick=pelnaSiec;
+  podepnij($('#app'));
 }
 function vGrupy(){
   const gr=listaGrup();
@@ -377,8 +309,6 @@ function vUst(){
   <label>Adres aplikacji Apps Script <small>(kończy się na /exec)</small></label><input class="in" id="u-url" value="${h(cfg.url||'')}" placeholder="https://script.google.com/macros/s/…/exec">
   <label>Token dostępu <small>(z logu funkcji setup)</small></label><input class="in" id="u-tok" value="${h(cfg.token||'')}">
   <button class="btn pri wide" id="u-save">Zapisz i połącz</button>
-  <h2>To ja</h2><p style="color:var(--muted);margin:0 0 6px">Wybierz siebie — staniesz w środku sieci więzi.</p>
-  <select class="in" id="u-ja"><option value="">— nie wybrano —</option>${S.osoby.slice().sort((a,b)=>nazwa(a).localeCompare(nazwa(b),'pl')).map(o=>`<option value="${o.id}" ${o.id===cfg.ja?'selected':''}>${h(nazwa(o))}</option>`).join('')}</select>
   <h2>Google Kontakty</h2><p style="color:var(--muted);margin:0">Wybierz kontakty do przeniesienia. Imię, telefon, urodziny, zdjęcie, notatki, skojarzenie i etykiety (jako grupy) przejdą automatycznie.</p>
   <button class="btn wide" id="u-imp">Importuj z Google Kontaktów</button>
   <button class="btn wide" id="u-gfoto">Pobierz brakujące zdjęcia z Google</button>
@@ -388,7 +318,6 @@ function vUst(){
   <button class="btn wide" id="u-ref">Odśwież z serwera</button>
   <button class="btn wide" id="u-fix">Uzupełnij powiązania rodzinne</button><p style="color:var(--muted);font-size:14px">Dopisuje brakujące powiązania, np. dzieci Marcina także jego partnerce.</p></main>`;
   $('#u-save').onclick=async()=>{cfg={...cfg,url:$('#u-url').value.trim(),token:$('#u-tok').value.trim()};localStorage.setItem('cfg',JSON.stringify(cfg));busy(true,'Łączę…');try{await api('lista');busy(false);toast('Połączono');S.view='ludzie';odswiez()}catch(e){busy(false);toast('Błąd: '+e.message)}};
-  $('#u-ja').onchange=e=>{cfg={...cfg,ja:e.target.value};localStorage.setItem('cfg',JSON.stringify(cfg));toast(e.target.value?'Jesteś teraz w środku sieci':'Usunięto wybór')};
   $('#u-imp').onclick=importGoogle;
   $('#u-gsync').onclick=async()=>{busy(true,'Synchronizuję z Google…');try{const j=await api('googleSyncTeraz');await odswiez();busy(false);toast(`Sprawdzono: ${j.sprawdzono}, zaktualizowano: ${j.zmieniono}`+(j.brakWGoogle?`, usuniętych z Google: ${j.brakWGoogle}`:'')+(j.blad?` (błąd: ${j.blad})`:''))}catch(e){busy(false);toast(e.message)}};
   $('#u-gfoto').onclick=async()=>{busy(true,'Pobieram zdjęcia…');try{const j=await api('googleFotoBrakujace');j.osoby.forEach(o=>{const i=S.osoby.findIndex(x=>x.id===o.id);if(i>=0)S.osoby[i]=o});zapiszCache();busy(false);toast(`Uzupełniono zdjęć: ${j.osoby.length} z ${j.sprawdzono}`+(j.blad?` (błąd: ${j.blad})`:''));render()}catch(e){busy(false);toast(e.message)}}; $('#u-fix').onclick=async()=>{busy(true,'Uzupełniam…');try{const n=await dodajRelacje(S.relacje.flatMap(uzupelnienia).map(x=>({...x,auto:true})));busy(false);toast(n?'Dodano powiązań: '+n:'Wszystko było kompletne')}catch(e){busy(false);toast(e.message)}};
